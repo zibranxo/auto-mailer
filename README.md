@@ -98,6 +98,7 @@ python mailer.py --resume
 | `--company-research` | Enable active `BeautifulSoup4` web scraping for context injection. | `False` |
 | `--variant-count` | Generate `N` variants concurrently and auto-select the best one. | `1` |
 | `--check-bounces` | Parse IMAP inbox for hard bounces to automatically suppress future attempts. | `False` |
+| `--check-mx` | Actively query DNS for MX records before sending to prevent hard-bounces. | `False` |
 | `--workers` | Number of concurrent threads for LLM API calls. | `1` |
 | `--health-port` | Exposes a lightweight background HTTP metrics server on this port. | `0` (Disabled) |
 | `--limit` | Maximum number of successful contacts to process. | `None` (All) |

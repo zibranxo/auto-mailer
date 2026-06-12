@@ -1495,6 +1495,8 @@ def main():
                         help="Number of email variants to generate and score per company")
     parser.add_argument("--check-bounces", action="store_true",
                         help="Check IMAP for bounce messages to automatically skip them")
+    parser.add_argument("--check-mx", action="store_true",
+                        help="Verify DNS MX records before generating/sending (default: disabled)")
     parser.add_argument("--health-port", type=int, default=0,
                         help="Port to run a background health check HTTP server on (default 0=disabled)")
     args = parser.parse_args()
@@ -1568,10 +1570,11 @@ def main():
             continue
             
         domain = email.split("@")[1]
-        if not has_valid_mx_record(domain):
-            invalid_email_count += 1
-            log.warning(f"No valid MX record (domain cannot receive emails), skipping: {company['Company']} -> {email}")
-            continue
+        if args.check_mx:
+            if not has_valid_mx_record(domain):
+                invalid_email_count += 1
+                log.warning(f"No valid MX record (domain cannot receive emails), skipping: {company['Company']} -> {email}")
+                continue
 
         # Check for duplicates within CSV
         if email in seen_emails:

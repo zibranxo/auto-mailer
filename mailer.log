@@ -1960,3 +1960,1149 @@
 2026-06-13 00:53:28,845  ERROR     Fatal SMTP error sending to ritika.pokhriyal@grizmolabs.com: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials d9443c01a7336-2c4327ac631sm28031425ad.44 - gsmtp')
 2026-06-13 00:53:28,845  WARNING     FAILED: Grizmolabs
 2026-06-13 00:53:28,850  INFO        Waiting 8.0s before next send...
+2026-06-13 01:18:13,773  INFO      Connecting to IMAP to sync bounces...
+2026-06-13 01:18:13,792  INFO      Health check server running on port 8080
+2026-06-13 01:18:19,207  INFO      Synced 2 newly bounced emails.
+2026-06-13 01:18:20,937  WARNING   No valid MX record (domain cannot receive emails), skipping: Zuraverse -> hiring@zuraverse.xyz
+2026-06-13 01:18:21,343  WARNING   No valid MX record (domain cannot receive emails), skipping: Impressico Business Solutions -> hr@impressicobusiness.com
+2026-06-13 01:18:26,977  WARNING   No valid MX record (domain cannot receive emails), skipping: Hajana Technologies -> careers@hajana.tech
+2026-06-13 01:18:28,103  WARNING   No valid MX record (domain cannot receive emails), skipping: Valeno Consulting -> careers@valeno.in
+2026-06-13 01:18:28,712  WARNING   No valid MX record (domain cannot receive emails), skipping: Zinivd -> hr@zinivd.com
+2026-06-13 01:18:28,920  WARNING   No valid MX record (domain cannot receive emails), skipping: OrbitXII Technologies -> careers@orbitxii.com
+2026-06-13 01:18:30,357  WARNING   No valid MX record (domain cannot receive emails), skipping: Truvant Consulting -> careers@truvant.in
+2026-06-13 01:18:30,459  WARNING   No valid MX record (domain cannot receive emails), skipping: Optimspace -> hr@optimspace.in
+2026-06-13 01:18:42,435  WARNING   No valid MX record (domain cannot receive emails), skipping: Yellow Metal -> careers@yellowmetal.in
+2026-06-13 01:18:45,303  WARNING   No valid MX record (domain cannot receive emails), skipping: Toffee Insurance -> careers@toffeeinsurance.com
+2026-06-13 01:18:48,581  WARNING   Duplicate email within CSV, skipping: BankBazaar -> careers@bankbazaar.com
+2026-06-13 01:18:49,402  WARNING   Duplicate email within CSV, skipping: Groww -> future@groww.in
+2026-06-13 01:18:49,402  WARNING   Duplicate email within CSV, skipping: Paytm -> hr@paytm.com
+2026-06-13 01:18:49,402  WARNING   Duplicate email within CSV, skipping: Volt Money -> careers@voltmoney.in
+2026-06-13 01:18:49,402  WARNING   Duplicate email within CSV, skipping: Fixerra -> careers@fixerra.in
+2026-06-13 01:19:02,091  WARNING   No valid MX record (domain cannot receive emails), skipping: Dunzo -> hr@dunzo.in
+2026-06-13 01:19:03,378  WARNING   Duplicate email within CSV, skipping: Paytm -> hr@paytm.com
+2026-06-13 01:19:16,028  WARNING   No valid MX record (domain cannot receive emails), skipping: Dgraph -> talent@dgraph.io
+2026-06-13 01:19:16,432  WARNING   No valid MX record (domain cannot receive emails), skipping: Vymo -> hr@vymo.com
+2026-06-13 01:19:21,557  WARNING   No valid MX record (domain cannot receive emails), skipping: Dozee -> hr@dozee.health
+2026-06-13 01:19:25,653  WARNING   No valid MX record (domain cannot receive emails), skipping: FPL Tech -> hr@fpltech.com
+2026-06-13 01:19:26,160  WARNING   No valid MX record (domain cannot receive emails), skipping: Vogo -> hr@vogo.in
+2026-06-13 01:19:30,156  WARNING   No valid MX record (domain cannot receive emails), skipping: Supr Daily -> hr@suprdaily.com
+2026-06-13 01:19:38,428  WARNING   No valid MX record (domain cannot receive emails), skipping: Zensar -> hr@zensar.com
+2026-06-13 01:19:48,570  WARNING   Duplicate email within CSV, skipping: Teachmint -> hr@teachmint.com
+2026-06-13 01:19:48,692  WARNING   No valid MX record (domain cannot receive emails), skipping: Lido Learning -> hr@lidolearning.com
+2026-06-13 01:19:49,103  WARNING   Duplicate email within CSV, skipping: Unacademy -> hr@unacademy.com
+2026-06-13 01:19:49,103  WARNING   Duplicate email within CSV, skipping: Eruditus -> hr@eruditus.com
+2026-06-13 01:19:49,104  WARNING   Duplicate email within CSV, skipping: UpGrad -> hr@upgrad.com
+2026-06-13 01:19:49,205  WARNING   Duplicate email within CSV, skipping: Great Learning -> hr@greatlearning.in
+2026-06-13 01:19:50,704  WARNING   Duplicate email within CSV, skipping: Udaan -> hr@udaan.com
+2026-06-13 01:19:50,704  WARNING   Duplicate email within CSV, skipping: Ninjacart -> hr@ninjacart.com
+2026-06-13 01:19:53,506  WARNING   Duplicate email within CSV, skipping: Blue Tokai Coffee -> hr@bluetokaicoffee.com
+2026-06-13 01:19:53,746  WARNING   Duplicate email within CSV, skipping: Nykaa -> hr@nykaa.com
+2026-06-13 01:19:55,552  WARNING   No valid MX record (domain cannot receive emails), skipping: Peyush Bansal Group -> hr@peyushbansal.com
+2026-06-13 01:19:56,827  WARNING   No valid MX record (domain cannot receive emails), skipping: Mitron -> hr@mitron.tv
+2026-06-13 01:19:57,700  INFO      Skipped 21 companies with invalid email format
+2026-06-13 01:19:57,700  INFO      Skipped 15 duplicate email entries within CSV
+2026-06-13 01:19:57,711  INFO      Contact score filtering: 471 -> 471 companies (min score: 2)
+2026-06-13 01:19:57,711  INFO      Processing 471 companies  |  dry_run=False  |  model=deepseek-ai/deepseek-v4-flash  |  fallback=meta/llama-3.3-70b-instruct  |  temp=0.2 top_p=0.95  |  thinking=False reasoning_effort=none  |  avg_contact_score=6.6/10
+2026-06-13 01:20:01,831  INFO      Parallel generation enabled: workers=4
+2026-06-13 01:20:01,842  INFO        Two99: Generating 2 variants in parallel...
+2026-06-13 01:20:01,850  INFO        Fetching web context for Uber from https://uber.com...
+2026-06-13 01:20:01,853  INFO        Fetching web context for Mu Sigma from https://mu-sigma.com...
+2026-06-13 01:20:01,853  INFO        Fetching web context for Fractal Analytics from https://fractal.ai...
+2026-06-13 01:20:03,907  INFO        Uber: Generating 2 variants in parallel...
+2026-06-13 01:20:04,063  INFO        Fractal Analytics: Generating 2 variants in parallel...
+2026-06-13 01:20:04,839  INFO        Mu Sigma: Generating 2 variants in parallel...
+2026-06-13 01:20:08,455  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:11,936  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:21,870  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:26,171  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:26,173  INFO        Two99: Best variant scored 100
+2026-06-13 01:20:26,174  INFO      [1/471] Generated email for Two99
+2026-06-13 01:20:26,174  INFO        Fetching web context for Tiger Analytics from https://tigeranalytics.com...
+2026-06-13 01:20:30,044  INFO        Tiger Analytics: Generating 2 variants in parallel...
+2026-06-13 01:20:31,496  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:37,845  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:46,301  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:46,302  INFO        Mu Sigma: Best variant scored 85
+2026-06-13 01:20:46,302  INFO      [4/471] Generated email for Mu Sigma
+2026-06-13 01:20:46,303  INFO        Fetching web context for Haptik from https://haptik.ai...
+2026-06-13 01:20:46,650  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:46,653  INFO        Fractal Analytics: Best variant scored 70
+2026-06-13 01:20:46,653  INFO      [3/471] Generated email for Fractal Analytics
+2026-06-13 01:20:46,654  INFO        Fetching web context for Yellow.ai from https://yellow.ai...
+2026-06-13 01:20:46,933  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:46,934  INFO        Tiger Analytics: Best variant scored 100
+2026-06-13 01:20:46,935  INFO      [5/471] Generated email for Tiger Analytics
+2026-06-13 01:20:46,935  INFO        Fetching web context for Gupshup from https://gupshup.io...
+2026-06-13 01:20:47,642  INFO        Yellow.ai: Generating 2 variants in parallel...
+2026-06-13 01:20:48,453  INFO        Haptik: Generating 2 variants in parallel...
+2026-06-13 01:20:49,070  INFO      Retrying request to /chat/completions in 0.441107 seconds
+2026-06-13 01:20:50,488  INFO        Gupshup: Generating 2 variants in parallel...
+2026-06-13 01:20:54,535  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:54,537  INFO        Uber: Best variant scored 100
+2026-06-13 01:20:54,537  INFO      [2/471] Generated email for Uber
+2026-06-13 01:20:54,538  INFO        Fetching web context for Zoho from https://zohocorp.com...
+2026-06-13 01:20:56,379  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:20:57,418  INFO        Zoho: Generating 2 variants in parallel...
+2026-06-13 01:21:08,052  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:08,257  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:08,259  INFO        Haptik: Best variant scored 100
+2026-06-13 01:21:08,259  INFO      [6/471] Generated email for Haptik
+2026-06-13 01:21:08,260  INFO        Fetching web context for Icertis from https://icertis.com...
+2026-06-13 01:21:10,547  INFO        Icertis: Generating 2 variants in parallel...
+2026-06-13 01:21:12,761  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:14,503  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:14,506  INFO        Yellow.ai: Best variant scored 100
+2026-06-13 01:21:14,506  INFO      [7/471] Generated email for Yellow.ai
+2026-06-13 01:21:14,507  INFO        Fetching web context for CleverTap from https://clevertap.com...
+2026-06-13 01:21:15,762  INFO        CleverTap: Generating 2 variants in parallel...
+2026-06-13 01:21:20,647  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:20,648  INFO        Gupshup: Best variant scored 100
+2026-06-13 01:21:20,650  INFO      [8/471] Generated email for Gupshup
+2026-06-13 01:21:20,651  INFO        Fetching web context for MoEngage from https://moengage.com...
+2026-06-13 01:21:22,973  INFO        MoEngage: Generating 2 variants in parallel...
+2026-06-13 01:21:32,833  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:35,808  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:38,159  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:38,162  INFO        Icertis: Best variant scored 85
+2026-06-13 01:21:38,162  INFO      [10/471] Generated email for Icertis
+2026-06-13 01:21:38,163  INFO        Fetching web context for Lenskart from https://lenskart.in...
+2026-06-13 01:21:40,711  INFO        Lenskart: Generating 2 variants in parallel...
+2026-06-13 01:21:42,120  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:42,122  INFO        CleverTap: Best variant scored 85
+2026-06-13 01:21:42,122  INFO      [11/471] Generated email for CleverTap
+2026-06-13 01:21:42,122  INFO        Fetching web context for Glance from https://glance.com...
+2026-06-13 01:21:42,428  INFO      Retrying request to /chat/completions in 0.445761 seconds
+2026-06-13 01:21:42,429  INFO      Retrying request to /chat/completions in 0.406466 seconds
+2026-06-13 01:21:43,361  INFO        Glance: Generating 2 variants in parallel...
+2026-06-13 01:21:49,525  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:21:52,364  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:03,859  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:05,906  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:08,222  INFO      Retrying request to /chat/completions in 0.383814 seconds
+2026-06-13 01:22:13,690  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:13,692  INFO        Zoho: Best variant scored 70
+2026-06-13 01:22:13,692  INFO      [9/471] Generated email for Zoho
+2026-06-13 01:22:13,694  INFO        Humantic AI: Generating 2 variants in parallel...
+2026-06-13 01:22:22,293  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:22,873  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:22,873  INFO        Glance: Best variant scored 85
+2026-06-13 01:22:22,875  INFO      [14/471] Generated email for Glance
+2026-06-13 01:22:22,876  INFO        Textrai: Generating 2 variants in parallel...
+2026-06-13 01:22:25,725  INFO      Retrying request to /chat/completions in 0.473715 seconds
+2026-06-13 01:22:32,055  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:32,056  INFO        Humantic AI: Best variant scored 100
+2026-06-13 01:22:32,056  INFO      [15/471] Generated email for Humantic AI
+2026-06-13 01:22:32,058  INFO        Royal Brothers: Generating 2 variants in parallel...
+2026-06-13 01:22:40,667  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:40,673  INFO        MoEngage: Best variant scored 85
+2026-06-13 01:22:40,673  INFO      [12/471] Generated email for MoEngage
+2026-06-13 01:22:40,673  INFO        DataZip: Generating 2 variants in parallel...
+2026-06-13 01:22:53,729  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:22:59,462  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:07,892  INFO      Retrying request to /chat/completions in 0.462000 seconds
+2026-06-13 01:23:07,892  INFO      Retrying request to /chat/completions in 0.498878 seconds
+2026-06-13 01:23:11,393  INFO      Retrying request to /chat/completions in 0.883568 seconds
+2026-06-13 01:23:14,106  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:17,228  INFO      Retrying request to /chat/completions in 0.444227 seconds
+2026-06-13 01:23:23,117  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:23,119  INFO        Royal Brothers: Best variant scored 100
+2026-06-13 01:23:23,119  INFO      [17/471] Generated email for Royal Brothers
+2026-06-13 01:23:23,119  INFO        Fetching web context for Enpass from https://enpass.io...
+2026-06-13 01:23:25,685  INFO      Retrying request to /chat/completions in 0.412458 seconds
+2026-06-13 01:23:26,848  INFO        Enpass: Generating 2 variants in parallel...
+2026-06-13 01:23:31,616  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:31,637  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:31,638  INFO        Lenskart: Best variant scored 85
+2026-06-13 01:23:31,639  INFO      [13/471] Generated email for Lenskart
+2026-06-13 01:23:31,639  INFO        Accenture: Generating 2 variants in parallel...
+2026-06-13 01:23:32,947  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:32,948  INFO        Enpass: Best variant scored 100
+2026-06-13 01:23:32,948  INFO      [19/471] Generated email for Enpass
+2026-06-13 01:23:32,950  INFO        HR Central: Generating 2 variants in parallel...
+2026-06-13 01:23:53,573  INFO      Retrying request to /chat/completions in 0.781692 seconds
+2026-06-13 01:23:56,117  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:56,126  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:56,129  INFO        DataZip: Best variant scored 100
+2026-06-13 01:23:56,130  INFO      [18/471] Generated email for DataZip
+2026-06-13 01:23:56,130  INFO        Peakflo (YC W22): Generating 2 variants in parallel...
+2026-06-13 01:23:57,113  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:58,035  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:23:58,038  INFO        Accenture: Best variant scored 85
+2026-06-13 01:23:58,038  INFO      [20/471] Generated email for Accenture
+2026-06-13 01:23:58,038  INFO        Fetching web context for Eightfold AI from https://eightfold.ai...
+2026-06-13 01:24:00,076  INFO        Eightfold AI: Generating 2 variants in parallel...
+2026-06-13 01:24:00,802  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:07,660  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:07,663  INFO        HR Central: Best variant scored 85
+2026-06-13 01:24:07,666  INFO      [21/471] Generated email for HR Central
+2026-06-13 01:24:07,666  INFO        Anblicks: Generating 2 variants in parallel...
+2026-06-13 01:24:17,389  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:17,391  INFO        Textrai: Best variant scored 85
+2026-06-13 01:24:17,392  INFO      [16/471] Generated email for Textrai
+2026-06-13 01:24:17,392  INFO        Fetching web context for Satyukt Analytics from https://satyukt.com...
+2026-06-13 01:24:18,037  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:18,040  INFO        Peakflo (YC W22): Best variant scored 85
+2026-06-13 01:24:18,040  INFO      [22/471] Generated email for Peakflo (YC W22)
+2026-06-13 01:24:18,041  INFO        Fetching web context for Smallcase from https://smallcase.com...
+2026-06-13 01:24:18,252  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:18,351  INFO        Satyukt Analytics: Generating 2 variants in parallel...
+2026-06-13 01:24:18,515  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:18,517  INFO      Retrying request to /chat/completions in 0.399529 seconds
+2026-06-13 01:24:19,028  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:19,028  INFO      Retrying request to /chat/completions in 0.764312 seconds
+2026-06-13 01:24:19,033  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:19,891  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:19,892  WARNING     Generation retry 1/2 for Satyukt Analytics: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:24:19,968  INFO        Smallcase: Generating 2 variants in parallel...
+2026-06-13 01:24:20,067  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:20,067  INFO      Retrying request to /chat/completions in 0.406762 seconds
+2026-06-13 01:24:20,073  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:20,073  INFO      Retrying request to /chat/completions in 0.407616 seconds
+2026-06-13 01:24:20,565  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:20,565  INFO      Retrying request to /chat/completions in 0.807467 seconds
+2026-06-13 01:24:20,570  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:20,571  INFO      Retrying request to /chat/completions in 0.911207 seconds
+2026-06-13 01:24:21,486  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:21,488  WARNING     Generation retry 1/2 for Smallcase: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.5s
+2026-06-13 01:24:21,586  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:21,586  WARNING     Generation retry 1/2 for Smallcase: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.3s
+2026-06-13 01:24:21,742  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:21,746  INFO      Retrying request to /chat/completions in 0.412445 seconds
+2026-06-13 01:24:22,304  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:22,304  INFO      Retrying request to /chat/completions in 0.756278 seconds
+2026-06-13 01:24:23,039  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:23,040  INFO      Retrying request to /chat/completions in 0.393600 seconds
+2026-06-13 01:24:23,068  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:23,071  INFO      Retrying request to /chat/completions in 0.394462 seconds
+2026-06-13 01:24:23,150  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:23,150  WARNING     Generation retry 2/2 for Satyukt Analytics: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.9s
+2026-06-13 01:24:23,530  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:23,530  INFO      Retrying request to /chat/completions in 0.826541 seconds
+2026-06-13 01:24:23,571  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:23,572  INFO      Retrying request to /chat/completions in 0.892924 seconds
+2026-06-13 01:24:24,476  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:24,479  WARNING     Generation retry 2/2 for Smallcase: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.0s
+2026-06-13 01:24:24,567  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:24,568  WARNING     Generation retry 2/2 for Smallcase: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.5s
+2026-06-13 01:24:27,220  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:27,221  INFO      Retrying request to /chat/completions in 0.441639 seconds
+2026-06-13 01:24:27,645  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:27,648  INFO      Retrying request to /chat/completions in 0.376071 seconds
+2026-06-13 01:24:27,833  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:27,835  INFO      Retrying request to /chat/completions in 0.811440 seconds
+2026-06-13 01:24:28,124  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:28,124  INFO      Retrying request to /chat/completions in 0.971650 seconds
+2026-06-13 01:24:28,243  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:28,243  INFO      Retrying request to /chat/completions in 0.485265 seconds
+2026-06-13 01:24:28,744  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:28,858  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:28,858  INFO      Retrying request to /chat/completions in 0.850148 seconds
+2026-06-13 01:24:29,273  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:29,878  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:29,892  WARNING     Smallcase: Using template fallback (LLM generation failed)
+2026-06-13 01:24:29,893  INFO      [26/471] Generated email for Smallcase
+2026-06-13 01:24:29,893  INFO        Fetching web context for Keka from https://keka.com...
+2026-06-13 01:24:31,009  INFO        Keka: Generating 2 variants in parallel...
+2026-06-13 01:24:31,111  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:31,112  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:31,113  INFO      Retrying request to /chat/completions in 0.437037 seconds
+2026-06-13 01:24:31,113  INFO      Retrying request to /chat/completions in 0.376466 seconds
+2026-06-13 01:24:31,622  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:31,624  INFO      Retrying request to /chat/completions in 0.906362 seconds
+2026-06-13 01:24:31,683  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:31,683  INFO      Retrying request to /chat/completions in 0.818333 seconds
+2026-06-13 01:24:32,646  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:32,646  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:32,648  WARNING     Generation retry 1/2 for Keka: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.7s
+2026-06-13 01:24:32,648  WARNING     Generation retry 1/2 for Keka: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.6s
+2026-06-13 01:24:34,389  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:34,390  INFO      Retrying request to /chat/completions in 0.428924 seconds
+2026-06-13 01:24:34,490  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:34,491  INFO      Retrying request to /chat/completions in 0.418498 seconds
+2026-06-13 01:24:35,004  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:35,004  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:35,004  INFO      Retrying request to /chat/completions in 0.995778 seconds
+2026-06-13 01:24:35,004  INFO      Retrying request to /chat/completions in 0.805338 seconds
+2026-06-13 01:24:35,932  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:35,932  WARNING     Generation retry 2/2 for Keka: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.8s
+2026-06-13 01:24:36,126  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:36,129  WARNING     Generation retry 2/2 for Keka: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.5s
+2026-06-13 01:24:37,972  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:37,981  INFO        Eightfold AI: Best variant scored 70
+2026-06-13 01:24:37,982  INFO        Fetching web context for Amazon from https://amazon.com...
+2026-06-13 01:24:37,982  INFO      [23/471] Generated email for Eightfold AI
+2026-06-13 01:24:38,893  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:38,893  INFO      Retrying request to /chat/completions in 0.475262 seconds
+2026-06-13 01:24:39,511  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:39,512  INFO      Retrying request to /chat/completions in 0.772335 seconds
+2026-06-13 01:24:39,717  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:39,717  INFO      Retrying request to /chat/completions in 0.380444 seconds
+2026-06-13 01:24:40,024  INFO        Amazon: Generating 2 variants in parallel...
+2026-06-13 01:24:40,120  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:40,120  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:40,120  INFO      Retrying request to /chat/completions in 0.407290 seconds
+2026-06-13 01:24:40,120  INFO      Retrying request to /chat/completions in 0.419024 seconds
+2026-06-13 01:24:40,429  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:40,429  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:40,431  INFO      Retrying request to /chat/completions in 0.797212 seconds
+2026-06-13 01:24:40,619  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:40,619  INFO      Retrying request to /chat/completions in 0.926277 seconds
+2026-06-13 01:24:40,628  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:40,630  INFO      Retrying request to /chat/completions in 0.763358 seconds
+2026-06-13 01:24:41,350  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:41,351  WARNING     Keka: Using template fallback (LLM generation failed)
+2026-06-13 01:24:41,351  INFO      [27/471] Generated email for Keka
+2026-06-13 01:24:41,351  INFO        Fetching web context for Morgan Stanley from https://morganstanley.com...
+2026-06-13 01:24:41,554  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:41,556  WARNING     Generation retry 1/2 for Amazon: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.2s
+2026-06-13 01:24:41,761  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:41,762  WARNING     Generation retry 1/2 for Amazon: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.0s
+2026-06-13 01:24:42,476  WARNING   No valid MX record (domain cannot receive emails), skipping: Zuraverse -> hiring@zuraverse.xyz
+2026-06-13 01:24:42,786  WARNING   No valid MX record (domain cannot receive emails), skipping: Impressico Business Solutions -> hr@impressicobusiness.com
+2026-06-13 01:24:43,753  INFO        Morgan Stanley: Generating 2 variants in parallel...
+2026-06-13 01:24:43,910  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:43,911  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:43,911  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:43,912  INFO      Retrying request to /chat/completions in 0.474561 seconds
+2026-06-13 01:24:43,912  INFO      Retrying request to /chat/completions in 0.412642 seconds
+2026-06-13 01:24:43,912  INFO      Retrying request to /chat/completions in 0.428622 seconds
+2026-06-13 01:24:44,115  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:44,117  INFO      Retrying request to /chat/completions in 0.445795 seconds
+2026-06-13 01:24:44,405  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:44,409  INFO      Retrying request to /chat/completions in 0.960125 seconds
+2026-06-13 01:24:44,459  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:44,459  INFO      Retrying request to /chat/completions in 0.782015 seconds
+2026-06-13 01:24:44,525  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:44,525  INFO      Retrying request to /chat/completions in 0.826282 seconds
+2026-06-13 01:24:44,730  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:44,730  INFO      Retrying request to /chat/completions in 0.943366 seconds
+2026-06-13 01:24:45,342  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:45,345  WARNING     Generation retry 1/2 for Morgan Stanley: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.2s
+2026-06-13 01:24:45,446  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:45,449  WARNING     Generation retry 1/2 for Morgan Stanley: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.8s
+2026-06-13 01:24:45,462  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:45,462  WARNING     Generation retry 2/2 for Amazon: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.8s
+2026-06-13 01:24:45,814  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:45,816  WARNING     Generation retry 2/2 for Amazon: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.5s
+2026-06-13 01:24:46,344  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:46,346  INFO      Retrying request to /chat/completions in 0.437385 seconds
+2026-06-13 01:24:46,882  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:46,882  INFO      Retrying request to /chat/completions in 0.997713 seconds
+2026-06-13 01:24:46,901  WARNING   No valid MX record (domain cannot receive emails), skipping: Hajana Technologies -> careers@hajana.tech
+2026-06-13 01:24:47,392  WARNING   No valid MX record (domain cannot receive emails), skipping: Valeno Consulting -> careers@valeno.in
+2026-06-13 01:24:47,699  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:47,700  INFO      Retrying request to /chat/completions in 0.441557 seconds
+2026-06-13 01:24:47,800  WARNING   No valid MX record (domain cannot receive emails), skipping: Zinivd -> hr@zinivd.com
+2026-06-13 01:24:47,890  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-13 01:24:47,892  WARNING   No valid MX record (domain cannot receive emails), skipping: OrbitXII Technologies -> careers@orbitxii.com
+2026-06-13 01:24:47,892  INFO        Satyukt Analytics: Best variant scored 85
+2026-06-13 01:24:47,894  INFO      [25/471] Generated email for Satyukt Analytics
+2026-06-13 01:24:47,895  INFO        Fetching web context for Salesforce from https://salesforce.com...
+2026-06-13 01:24:48,015  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:48,017  WARNING     Generation retry 2/2 for Morgan Stanley: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.4s
+2026-06-13 01:24:48,250  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:48,252  INFO      Retrying request to /chat/completions in 0.938102 seconds
+2026-06-13 01:24:48,354  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:48,356  INFO      Retrying request to /chat/completions in 0.497015 seconds
+2026-06-13 01:24:48,537  WARNING   No valid MX record (domain cannot receive emails), skipping: Truvant Consulting -> careers@truvant.in
+2026-06-13 01:24:48,869  WARNING   No valid MX record (domain cannot receive emails), skipping: Optimspace -> hr@optimspace.in
+2026-06-13 01:24:48,944  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:48,945  INFO      Retrying request to /chat/completions in 0.872981 seconds
+2026-06-13 01:24:49,338  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:49,339  WARNING     Generation retry 2/2 for Morgan Stanley: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.4s
+2026-06-13 01:24:49,952  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:50,371  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:50,371  INFO      Retrying request to /chat/completions in 0.385340 seconds
+2026-06-13 01:24:50,636  INFO        Salesforce: Generating 2 variants in parallel...
+2026-06-13 01:24:50,770  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:50,770  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:50,770  INFO      Retrying request to /chat/completions in 0.379990 seconds
+2026-06-13 01:24:50,770  INFO      Retrying request to /chat/completions in 0.452807 seconds
+2026-06-13 01:24:51,078  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:51,079  INFO      Retrying request to /chat/completions in 0.914260 seconds
+2026-06-13 01:24:51,240  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:51,240  INFO      Retrying request to /chat/completions in 0.764346 seconds
+2026-06-13 01:24:51,380  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:51,380  INFO      Retrying request to /chat/completions in 0.959903 seconds
+2026-06-13 01:24:51,487  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:51,488  INFO      Retrying request to /chat/completions in 0.397177 seconds
+2026-06-13 01:24:52,005  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:52,006  INFO      Retrying request to /chat/completions in 0.955877 seconds
+2026-06-13 01:24:52,085  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:52,085  WARNING     Generation retry 1/2 for Salesforce: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.2s
+2026-06-13 01:24:52,085  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:52,090  WARNING     Amazon: Using template fallback (LLM generation failed)
+2026-06-13 01:24:52,090  INFO      [28/471] Generated email for Amazon
+2026-06-13 01:24:52,090  INFO        Fetching web context for Swiggy from https://swiggy.in...
+2026-06-13 01:24:52,419  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:52,419  WARNING     Generation retry 1/2 for Salesforce: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.6s
+2026-06-13 01:24:52,677  INFO      Retrying request to /chat/completions in 0.445294 seconds
+2026-06-13 01:24:52,796  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:52,796  INFO      Retrying request to /chat/completions in 0.380233 seconds
+2026-06-13 01:24:53,125  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:53,228  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:53,230  INFO      Retrying request to /chat/completions in 0.774744 seconds
+2026-06-13 01:24:53,277  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:53,278  INFO      Retrying request to /chat/completions in 0.830106 seconds
+2026-06-13 01:24:53,484  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:53,484  INFO      Retrying request to /chat/completions in 0.467529 seconds
+2026-06-13 01:24:53,848  INFO        Swiggy: Generating 2 variants in parallel...
+2026-06-13 01:24:53,924  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:53,924  INFO      Retrying request to /chat/completions in 0.409271 seconds
+2026-06-13 01:24:53,956  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:53,956  INFO      Retrying request to /chat/completions in 0.417249 seconds
+2026-06-13 01:24:54,055  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:54,059  INFO      Retrying request to /chat/completions in 0.909169 seconds
+2026-06-13 01:24:54,075  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:54,075  INFO      Retrying request to /chat/completions in 0.470804 seconds
+2026-06-13 01:24:54,117  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:54,118  WARNING     Generation retry 1/2 for Anblicks: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.8s
+2026-06-13 01:24:54,260  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:54,261  WARNING     Morgan Stanley: Using template fallback (LLM generation failed)
+2026-06-13 01:24:54,261  INFO      [29/471] Generated email for Morgan Stanley
+2026-06-13 01:24:54,282  INFO        Fetching web context for Ola Cabs from https://olacabs.com...
+2026-06-13 01:24:54,416  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:54,416  INFO      Retrying request to /chat/completions in 0.757375 seconds
+2026-06-13 01:24:54,476  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:54,476  INFO      Retrying request to /chat/completions in 0.939734 seconds
+2026-06-13 01:24:54,661  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:54,661  INFO      Retrying request to /chat/completions in 0.771044 seconds
+2026-06-13 01:24:55,032  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:55,032  INFO      Retrying request to /chat/completions in 0.425440 seconds
+2026-06-13 01:24:55,073  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:55,073  WARNING     Generation retry 2/2 for Salesforce: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.7s
+2026-06-13 01:24:55,277  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:55,277  WARNING     Generation retry 1/2 for Swiggy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.5s
+2026-06-13 01:24:55,535  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:55,537  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:55,537  WARNING     Generation retry 1/2 for Swiggy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:24:55,539  WARNING     Generation retry 2/2 for Salesforce: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.4s
+2026-06-13 01:24:55,548  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:55,550  INFO      Retrying request to /chat/completions in 0.972483 seconds
+2026-06-13 01:24:56,033  INFO        Ola Cabs: Generating 2 variants in parallel...
+2026-06-13 01:24:56,106  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:56,106  INFO      Retrying request to /chat/completions in 0.381467 seconds
+2026-06-13 01:24:56,300  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:56,300  INFO      Retrying request to /chat/completions in 0.445624 seconds
+2026-06-13 01:24:56,516  WARNING   No valid MX record (domain cannot receive emails), skipping: Yellow Metal -> careers@yellowmetal.in
+2026-06-13 01:24:56,610  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:56,610  INFO      Retrying request to /chat/completions in 0.977908 seconds
+2026-06-13 01:24:56,611  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:56,611  WARNING     Generation retry 2/2 for Anblicks: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.6s
+2026-06-13 01:24:56,821  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:56,821  INFO      Retrying request to /chat/completions in 0.391313 seconds
+2026-06-13 01:24:56,834  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:56,835  INFO      Retrying request to /chat/completions in 0.813871 seconds
+2026-06-13 01:24:57,309  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:57,309  INFO      Retrying request to /chat/completions in 0.816614 seconds
+2026-06-13 01:24:57,443  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:57,446  INFO      Retrying request to /chat/completions in 0.411582 seconds
+2026-06-13 01:24:57,668  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:57,668  WARNING     Generation retry 1/2 for Ola Cabs: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.5s
+2026-06-13 01:24:57,837  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:57,837  WARNING   No valid MX record (domain cannot receive emails), skipping: Toffee Insurance -> careers@toffeeinsurance.com
+2026-06-13 01:24:57,838  WARNING     Generation retry 1/2 for Ola Cabs: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.5s
+2026-06-13 01:24:57,945  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:57,945  INFO      Retrying request to /chat/completions in 0.934973 seconds
+2026-06-13 01:24:58,216  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:58,216  WARNING     Generation retry 2/2 for Swiggy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.4s
+2026-06-13 01:24:58,896  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:58,897  INFO      Retrying request to /chat/completions in 0.423605 seconds
+2026-06-13 01:24:59,066  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:59,067  WARNING     Generation retry 2/2 for Swiggy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.9s
+2026-06-13 01:24:59,282  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:59,282  INFO      Retrying request to /chat/completions in 0.420445 seconds
+2026-06-13 01:24:59,476  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:59,477  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:59,477  INFO      Retrying request to /chat/completions in 0.449278 seconds
+2026-06-13 01:24:59,477  INFO      Retrying request to /chat/completions in 0.845336 seconds
+2026-06-13 01:24:59,716  WARNING   Duplicate email within CSV, skipping: BankBazaar -> careers@bankbazaar.com
+2026-06-13 01:24:59,784  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:59,784  INFO      Retrying request to /chat/completions in 0.941304 seconds
+2026-06-13 01:24:59,993  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:24:59,994  INFO      Retrying request to /chat/completions in 0.833120 seconds
+2026-06-13 01:25:00,048  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:00,050  INFO      Retrying request to /chat/completions in 0.456929 seconds
+2026-06-13 01:25:00,050  WARNING   Duplicate email within CSV, skipping: Groww -> future@groww.in
+2026-06-13 01:25:00,050  WARNING   Duplicate email within CSV, skipping: Paytm -> hr@paytm.com
+2026-06-13 01:25:00,050  WARNING   Duplicate email within CSV, skipping: Volt Money -> careers@voltmoney.in
+2026-06-13 01:25:00,050  WARNING   Duplicate email within CSV, skipping: Fixerra -> careers@fixerra.in
+2026-06-13 01:25:00,294  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:00,294  INFO      Retrying request to /chat/completions in 0.471016 seconds
+2026-06-13 01:25:00,498  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:00,603  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:00,604  INFO      Retrying request to /chat/completions in 0.783315 seconds
+2026-06-13 01:25:00,703  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:00,703  INFO      Retrying request to /chat/completions in 0.460624 seconds
+2026-06-13 01:25:00,842  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:00,842  WARNING     Generation retry 2/2 for Ola Cabs: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.1s
+2026-06-13 01:25:00,859  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:00,859  INFO      Retrying request to /chat/completions in 0.953995 seconds
+2026-06-13 01:25:01,111  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:01,115  INFO      Retrying request to /chat/completions in 0.391802 seconds
+2026-06-13 01:25:01,115  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:01,115  WARNING     Generation retry 2/2 for Ola Cabs: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.3s
+2026-06-13 01:25:01,317  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:01,317  INFO      Retrying request to /chat/completions in 0.968901 seconds
+2026-06-13 01:25:01,515  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:01,518  WARNING     Salesforce: Using template fallback (LLM generation failed)
+2026-06-13 01:25:01,518  INFO      [30/471] Generated email for Salesforce
+2026-06-13 01:25:01,519  INFO        Fetching web context for CureFit from https://curefit.com...
+2026-06-13 01:25:01,631  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:01,633  INFO      Retrying request to /chat/completions in 0.795559 seconds
+2026-06-13 01:25:01,934  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:01,935  INFO        Anblicks: Best variant scored 100
+2026-06-13 01:25:01,936  INFO      [24/471] Generated email for Anblicks
+2026-06-13 01:25:01,936  INFO        Practo: Generating 2 variants in parallel...
+2026-06-13 01:25:02,045  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:02,046  INFO      Retrying request to /chat/completions in 0.451437 seconds
+2026-06-13 01:25:02,206  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:02,206  INFO      Retrying request to /chat/completions in 0.474486 seconds
+2026-06-13 01:25:02,440  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:02,538  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:02,542  WARNING     Swiggy: Using template fallback (LLM generation failed)
+2026-06-13 01:25:02,542  INFO      [31/471] Generated email for Swiggy
+2026-06-13 01:25:02,543  INFO        Fetching web context for Pharmeasy from https://pharmeasy.in...
+2026-06-13 01:25:02,651  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:02,651  INFO      Retrying request to /chat/completions in 0.761351 seconds
+2026-06-13 01:25:02,770  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:02,770  INFO      Retrying request to /chat/completions in 0.792320 seconds
+2026-06-13 01:25:03,616  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:03,647  WARNING     Generation retry 1/2 for Practo: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.6s
+2026-06-13 01:25:03,647  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:03,650  INFO        Pharmeasy: Generating 2 variants in parallel...
+2026-06-13 01:25:03,650  INFO      Retrying request to /chat/completions in 0.384583 seconds
+2026-06-13 01:25:03,776  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:03,776  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:03,776  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:03,776  WARNING     Generation retry 1/2 for Practo: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.9s
+2026-06-13 01:25:03,776  INFO      Retrying request to /chat/completions in 0.452020 seconds
+2026-06-13 01:25:03,779  INFO      Retrying request to /chat/completions in 0.461544 seconds
+2026-06-13 01:25:04,183  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:04,186  INFO      Retrying request to /chat/completions in 0.863980 seconds
+2026-06-13 01:25:04,337  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:04,337  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:04,342  INFO      Retrying request to /chat/completions in 0.992968 seconds
+2026-06-13 01:25:04,342  INFO      Retrying request to /chat/completions in 0.817285 seconds
+2026-06-13 01:25:04,802  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:04,805  INFO      Retrying request to /chat/completions in 0.449343 seconds
+2026-06-13 01:25:05,013  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,014  INFO      Retrying request to /chat/completions in 0.397549 seconds
+2026-06-13 01:25:05,138  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,247  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,249  WARNING     Generation retry 1/2 for Pharmeasy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.7s
+2026-06-13 01:25:05,325  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,325  INFO      Retrying request to /chat/completions in 0.782780 seconds
+2026-06-13 01:25:05,336  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,336  INFO      Retrying request to /chat/completions in 0.470690 seconds
+2026-06-13 01:25:05,415  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,415  WARNING     Generation retry 1/2 for Pharmeasy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.5s
+2026-06-13 01:25:05,485  INFO        CureFit: Generating 2 variants in parallel...
+2026-06-13 01:25:05,505  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,507  INFO      Retrying request to /chat/completions in 0.980052 seconds
+2026-06-13 01:25:05,560  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,561  INFO      Retrying request to /chat/completions in 0.402560 seconds
+2026-06-13 01:25:05,562  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,564  INFO      Retrying request to /chat/completions in 0.487111 seconds
+2026-06-13 01:25:05,925  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:05,925  INFO      Retrying request to /chat/completions in 0.764459 seconds
+2026-06-13 01:25:06,060  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:06,061  INFO      Retrying request to /chat/completions in 0.796231 seconds
+2026-06-13 01:25:06,233  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:06,233  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:06,233  WARNING     Generation retry 2/2 for Practo: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.9s
+2026-06-13 01:25:06,233  INFO      Retrying request to /chat/completions in 0.765985 seconds
+2026-06-13 01:25:06,617  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:06,620  WARNING     Ola Cabs: Using template fallback (LLM generation failed)
+2026-06-13 01:25:06,620  INFO      [32/471] Generated email for Ola Cabs
+2026-06-13 01:25:06,621  INFO        Fetching web context for 1mg from https://1mg.com...
+2026-06-13 01:25:06,811  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:06,812  WARNING     Generation retry 2/2 for Practo: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.9s
+2026-06-13 01:25:06,944  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:06,944  WARNING     Generation retry 1/2 for CureFit: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.7s
+2026-06-13 01:25:06,995  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:06,999  INFO      Retrying request to /chat/completions in 0.461231 seconds
+2026-06-13 01:25:07,018  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:07,023  INFO      Retrying request to /chat/completions in 0.463318 seconds
+2026-06-13 01:25:07,105  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:07,107  WARNING     Generation retry 1/2 for CureFit: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.8s
+2026-06-13 01:25:07,575  WARNING   Duplicate email within CSV, skipping: BankBazaar -> careers@bankbazaar.com
+2026-06-13 01:25:07,575  WARNING   Duplicate email within CSV, skipping: Groww -> future@groww.in
+2026-06-13 01:25:07,576  WARNING   Duplicate email within CSV, skipping: Paytm -> hr@paytm.com
+2026-06-13 01:25:07,576  WARNING   Duplicate email within CSV, skipping: Volt Money -> careers@voltmoney.in
+2026-06-13 01:25:07,576  WARNING   Duplicate email within CSV, skipping: Fixerra -> careers@fixerra.in
+2026-06-13 01:25:07,577  WARNING   Duplicate email within CSV, skipping: Paytm -> hr@paytm.com
+2026-06-13 01:25:07,577  WARNING   Duplicate email within CSV, skipping: Teachmint -> hr@teachmint.com
+2026-06-13 01:25:07,577  WARNING   Duplicate email within CSV, skipping: Unacademy -> hr@unacademy.com
+2026-06-13 01:25:07,577  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:07,578  WARNING   Duplicate email within CSV, skipping: Eruditus -> hr@eruditus.com
+2026-06-13 01:25:07,578  WARNING   Duplicate email within CSV, skipping: UpGrad -> hr@upgrad.com
+2026-06-13 01:25:07,578  WARNING   Duplicate email within CSV, skipping: Great Learning -> hr@greatlearning.in
+2026-06-13 01:25:07,578  WARNING   Duplicate email within CSV, skipping: Udaan -> hr@udaan.com
+2026-06-13 01:25:07,578  WARNING   Duplicate email within CSV, skipping: Ninjacart -> hr@ninjacart.com
+2026-06-13 01:25:07,578  WARNING   Duplicate email within CSV, skipping: Blue Tokai Coffee -> hr@bluetokaicoffee.com
+2026-06-13 01:25:07,578  WARNING   Duplicate email within CSV, skipping: Nykaa -> hr@nykaa.com
+2026-06-13 01:25:07,579  INFO      Skipped 15 duplicate email entries within CSV
+2026-06-13 01:25:07,579  INFO      Retrying request to /chat/completions in 0.818524 seconds
+2026-06-13 01:25:07,582  INFO      Contact score filtering: 492 -> 492 companies (min score: 2)
+2026-06-13 01:25:07,583  INFO      Processing 2 companies  |  dry_run=True  |  model=deepseek-ai/deepseek-v4-flash  |  fallback=meta/llama-3.3-70b-instruct  |  temp=0.2 top_p=0.95  |  thinking=False reasoning_effort=none  |  avg_contact_score=9.0/10
+2026-06-13 01:25:07,584  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:07,585  INFO      Retrying request to /chat/completions in 0.858294 seconds
+2026-06-13 01:25:08,025  INFO      [1/2] Generating email for Two99 -> hiring@two99.org
+2026-06-13 01:25:08,029  INFO        Two99: Generating 2 variants in parallel...
+2026-06-13 01:25:08,086  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,086  INFO      Retrying request to /chat/completions in 0.484703 seconds
+2026-06-13 01:25:08,279  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,282  INFO      Retrying request to /chat/completions in 0.457200 seconds
+2026-06-13 01:25:08,484  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,487  WARNING     Generation retry 2/2 for Pharmeasy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.7s
+2026-06-13 01:25:08,580  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,580  WARNING     Generation retry 2/2 for Pharmeasy: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.2s
+2026-06-13 01:25:08,665  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,666  INFO      Retrying request to /chat/completions in 0.968696 seconds
+2026-06-13 01:25:08,754  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,755  INFO      Retrying request to /chat/completions in 0.450320 seconds
+2026-06-13 01:25:08,825  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,825  INFO      Retrying request to /chat/completions in 0.816905 seconds
+2026-06-13 01:25:08,827  INFO        1mg: Generating 2 variants in parallel...
+2026-06-13 01:25:08,942  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,942  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:08,942  INFO      Retrying request to /chat/completions in 0.486536 seconds
+2026-06-13 01:25:08,942  INFO      Retrying request to /chat/completions in 0.489790 seconds
+2026-06-13 01:25:09,192  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,195  INFO      Retrying request to /chat/completions in 0.384812 seconds
+2026-06-13 01:25:09,235  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,235  INFO      Retrying request to /chat/completions in 0.405882 seconds
+2026-06-13 01:25:09,304  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,304  INFO      Retrying request to /chat/completions in 0.778975 seconds
+2026-06-13 01:25:09,590  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,590  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,592  INFO      Retrying request to /chat/completions in 0.798835 seconds
+2026-06-13 01:25:09,592  INFO      Retrying request to /chat/completions in 0.880710 seconds
+2026-06-13 01:25:09,666  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,666  INFO      Retrying request to /chat/completions in 0.765693 seconds
+2026-06-13 01:25:09,709  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,711  WARNING     Generation retry 2/2 for CureFit: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.6s
+2026-06-13 01:25:09,735  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:09,736  INFO      Retrying request to /chat/completions in 0.856473 seconds
+2026-06-13 01:25:10,104  WARNING   No valid MX record (domain cannot receive emails), skipping: Dunzo -> hr@dunzo.in
+2026-06-13 01:25:10,165  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,166  WARNING     Generation retry 2/2 for CureFit: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.0s
+2026-06-13 01:25:10,328  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,328  INFO      Retrying request to /chat/completions in 0.385426 seconds
+2026-06-13 01:25:10,487  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,495  WARNING     Generation retry 1/2 for 1mg: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.2s
+2026-06-13 01:25:10,520  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,527  WARNING     Generation retry 1/2 for Two99: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.9s
+2026-06-13 01:25:10,601  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,602  WARNING     Generation retry 1/2 for 1mg: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.2s
+2026-06-13 01:25:10,717  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,717  WARNING     Generation retry 1/2 for Two99: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.4s
+2026-06-13 01:25:10,843  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,843  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:10,843  INFO      Retrying request to /chat/completions in 0.483506 seconds
+2026-06-13 01:25:10,843  INFO      Retrying request to /chat/completions in 0.847307 seconds
+2026-06-13 01:25:10,855  WARNING   Duplicate email within CSV, skipping: Paytm -> hr@paytm.com
+2026-06-13 01:25:11,456  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:11,457  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:11,458  INFO      Retrying request to /chat/completions in 0.414597 seconds
+2026-06-13 01:25:11,459  INFO      Retrying request to /chat/completions in 0.893409 seconds
+2026-06-13 01:25:11,660  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:11,662  INFO      Retrying request to /chat/completions in 0.498663 seconds
+2026-06-13 01:25:11,827  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:11,827  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:11,830  INFO      Retrying request to /chat/completions in 0.423040 seconds
+2026-06-13 01:25:11,967  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:11,969  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:11,969  INFO      Retrying request to /chat/completions in 0.478544 seconds
+2026-06-13 01:25:11,969  INFO      Retrying request to /chat/completions in 0.851810 seconds
+2026-06-13 01:25:12,202  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:12,202  INFO      Retrying request to /chat/completions in 0.388133 seconds
+2026-06-13 01:25:12,255  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:12,255  INFO      Retrying request to /chat/completions in 0.970427 seconds
+2026-06-13 01:25:12,322  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:12,328  INFO      Retrying request to /chat/completions in 0.976731 seconds
+2026-06-13 01:25:12,459  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:12,460  WARNING     Practo: Using template fallback (LLM generation failed)
+2026-06-13 01:25:12,460  INFO      [34/471] Generated email for Practo
+2026-06-13 01:25:12,460  INFO        Fetching web context for Innovaccer from https://innovaccer.com...
+2026-06-13 01:25:12,567  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:12,569  INFO      Retrying request to /chat/completions in 0.801579 seconds
+2026-06-13 01:25:12,685  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:12,687  INFO      Retrying request to /chat/completions in 0.802216 seconds
+2026-06-13 01:25:12,885  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:12,891  INFO      Retrying request to /chat/completions in 0.471011 seconds
+2026-06-13 01:25:12,992  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:13,310  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:13,310  WARNING     Generation retry 2/2 for Two99: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.5s
+2026-06-13 01:25:13,456  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:13,456  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:13,456  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:13,458  WARNING     Generation retry 2/2 for 1mg: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.7s
+2026-06-13 01:25:13,458  WARNING     Pharmeasy: Using template fallback (LLM generation failed)
+2026-06-13 01:25:13,458  INFO      Retrying request to /chat/completions in 0.775962 seconds
+2026-06-13 01:25:13,458  INFO      [35/471] Generated email for Pharmeasy
+2026-06-13 01:25:13,460  INFO        Fetching web context for Darwinbox from https://darwinbox.in...
+2026-06-13 01:25:13,582  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:13,583  WARNING     Generation retry 2/2 for Two99: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:25:14,123  INFO        Darwinbox: Generating 2 variants in parallel...
+2026-06-13 01:25:14,221  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,221  INFO      Retrying request to /chat/completions in 0.422306 seconds
+2026-06-13 01:25:14,296  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,296  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,297  INFO      Retrying request to /chat/completions in 0.428793 seconds
+2026-06-13 01:25:14,297  INFO      Retrying request to /chat/completions in 0.389039 seconds
+2026-06-13 01:25:14,350  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,351  WARNING     Generation retry 2/2 for 1mg: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.0s
+2026-06-13 01:25:14,746  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,754  INFO      Retrying request to /chat/completions in 0.957746 seconds
+2026-06-13 01:25:14,783  INFO        Innovaccer: Generating 2 variants in parallel...
+2026-06-13 01:25:14,792  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,794  INFO      Retrying request to /chat/completions in 0.915518 seconds
+2026-06-13 01:25:14,938  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,938  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,938  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:14,939  INFO      Retrying request to /chat/completions in 0.479780 seconds
+2026-06-13 01:25:14,939  INFO      Retrying request to /chat/completions in 0.376706 seconds
+2026-06-13 01:25:14,940  INFO      Retrying request to /chat/completions in 0.924709 seconds
+2026-06-13 01:25:15,050  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,052  INFO      Retrying request to /chat/completions in 0.436613 seconds
+2026-06-13 01:25:15,400  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,400  INFO      Retrying request to /chat/completions in 0.984589 seconds
+2026-06-13 01:25:15,499  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,500  INFO      Retrying request to /chat/completions in 0.428366 seconds
+2026-06-13 01:25:15,511  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,514  INFO      Retrying request to /chat/completions in 0.875509 seconds
+2026-06-13 01:25:15,572  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,574  INFO      Retrying request to /chat/completions in 0.788838 seconds
+2026-06-13 01:25:15,826  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,828  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,830  WARNING     CureFit: Using template fallback (LLM generation failed)
+2026-06-13 01:25:15,831  WARNING     Generation retry 1/2 for Darwinbox: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.9s
+2026-06-13 01:25:15,831  INFO      [33/471] Generated email for CureFit
+2026-06-13 01:25:15,831  INFO        Fetching web context for BrowserStack from https://browserstack.com...
+2026-06-13 01:25:15,938  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:15,938  WARNING     Generation retry 1/2 for Darwinbox: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.6s
+2026-06-13 01:25:16,065  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,065  INFO      Retrying request to /chat/completions in 0.819028 seconds
+2026-06-13 01:25:16,380  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,381  INFO      Retrying request to /chat/completions in 0.473870 seconds
+2026-06-13 01:25:16,476  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,476  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,477  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,478  WARNING     Generation retry 1/2 for Innovaccer: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.4s
+2026-06-13 01:25:16,478  WARNING     Generation retry 1/2 for Innovaccer: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.8s
+2026-06-13 01:25:16,783  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,783  INFO      Retrying request to /chat/completions in 0.428603 seconds
+2026-06-13 01:25:16,986  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,986  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:16,986  INFO      Retrying request to /chat/completions in 0.795535 seconds
+2026-06-13 01:25:16,987  WARNING     Two99: Using template fallback (LLM generation failed)
+2026-06-13 01:25:16,988  INFO      [2/2] Generating email for Uber -> university-india@uber.com
+2026-06-13 01:25:16,989  INFO        Fetching web context for Uber from https://uber.com...
+2026-06-13 01:25:17,322  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,322  INFO      Retrying request to /chat/completions in 0.990179 seconds
+2026-06-13 01:25:17,372  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,373  INFO      Retrying request to /chat/completions in 0.419551 seconds
+2026-06-13 01:25:17,407  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,408  INFO      Retrying request to /chat/completions in 0.414674 seconds
+2026-06-13 01:25:17,703  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,703  INFO      Retrying request to /chat/completions in 0.457704 seconds
+2026-06-13 01:25:17,874  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,889  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,889  INFO      Retrying request to /chat/completions in 0.762015 seconds
+2026-06-13 01:25:17,943  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,943  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:17,946  INFO      Retrying request to /chat/completions in 0.824421 seconds
+2026-06-13 01:25:17,946  INFO      Retrying request to /chat/completions in 0.420919 seconds
+2026-06-13 01:25:18,239  INFO        BrowserStack: Generating 2 variants in parallel...
+2026-06-13 01:25:18,319  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,319  INFO      Retrying request to /chat/completions in 0.838790 seconds
+2026-06-13 01:25:18,324  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,325  INFO      Retrying request to /chat/completions in 0.470483 seconds
+2026-06-13 01:25:18,363  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,363  INFO      Retrying request to /chat/completions in 0.477001 seconds
+2026-06-13 01:25:18,429  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,429  WARNING     Generation retry 2/2 for Darwinbox: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.4s
+2026-06-13 01:25:18,438  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,444  INFO      Retrying request to /chat/completions in 0.947463 seconds
+2026-06-13 01:25:18,726  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,727  WARNING     Generation retry 2/2 for Innovaccer: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.2s
+2026-06-13 01:25:18,858  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,858  WARNING     1mg: Using template fallback (LLM generation failed)
+2026-06-13 01:25:18,863  INFO        Fetching web context for Postman from https://postman.com...
+2026-06-13 01:25:18,884  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,884  INFO      Retrying request to /chat/completions in 0.927490 seconds
+2026-06-13 01:25:18,931  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:18,931  INFO      Retrying request to /chat/completions in 0.793427 seconds
+2026-06-13 01:25:19,042  INFO        Uber: Generating 2 variants in parallel...
+2026-06-13 01:25:19,128  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,128  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,130  INFO      Retrying request to /chat/completions in 0.467695 seconds
+2026-06-13 01:25:19,130  INFO      Retrying request to /chat/completions in 0.386477 seconds
+2026-06-13 01:25:19,238  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,238  WARNING     Generation retry 2/2 for Darwinbox: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.3s
+2026-06-13 01:25:19,342  WARNING   No valid MX record (domain cannot receive emails), skipping: Dgraph -> talent@dgraph.io
+2026-06-13 01:25:19,526  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,528  WARNING     Generation retry 2/2 for Innovaccer: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.0s
+2026-06-13 01:25:19,590  WARNING   No valid MX record (domain cannot receive emails), skipping: Vymo -> hr@vymo.com
+2026-06-13 01:25:19,601  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,601  INFO      Retrying request to /chat/completions in 0.906253 seconds
+2026-06-13 01:25:19,688  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,689  INFO      Retrying request to /chat/completions in 0.788778 seconds
+2026-06-13 01:25:19,821  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,826  WARNING     Generation retry 1/2 for BrowserStack: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.3s
+2026-06-13 01:25:19,958  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:19,959  WARNING     Generation retry 1/2 for BrowserStack: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.3s
+2026-06-13 01:25:20,570  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:20,571  WARNING     Generation retry 1/2 for Uber: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.2s
+2026-06-13 01:25:20,590  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:20,591  WARNING     Generation retry 1/2 for Uber: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.0s
+2026-06-13 01:25:20,956  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:20,956  INFO      Retrying request to /chat/completions in 0.436811 seconds
+2026-06-13 01:25:21,061  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,062  INFO        Postman: Generating 2 variants in parallel...
+2026-06-13 01:25:21,064  INFO      Retrying request to /chat/completions in 0.476992 seconds
+2026-06-13 01:25:21,140  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,142  INFO      Retrying request to /chat/completions in 0.435908 seconds
+2026-06-13 01:25:21,155  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,158  INFO      Retrying request to /chat/completions in 0.388152 seconds
+2026-06-13 01:25:21,192  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,192  INFO      Retrying request to /chat/completions in 0.491308 seconds
+2026-06-13 01:25:21,290  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,293  INFO      Retrying request to /chat/completions in 0.392452 seconds
+2026-06-13 01:25:21,488  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,488  INFO      Retrying request to /chat/completions in 0.891699 seconds
+2026-06-13 01:25:21,557  WARNING   No valid MX record (domain cannot receive emails), skipping: Board Infinity -> hr@boardinfinity.com
+2026-06-13 01:25:21,630  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,630  INFO      Retrying request to /chat/completions in 0.425629 seconds
+2026-06-13 01:25:21,639  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,639  INFO      Retrying request to /chat/completions in 0.943578 seconds
+2026-06-13 01:25:21,653  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,654  INFO      Retrying request to /chat/completions in 0.873251 seconds
+2026-06-13 01:25:21,657  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,658  INFO      Retrying request to /chat/completions in 0.940679 seconds
+2026-06-13 01:25:21,782  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,782  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,783  INFO      Retrying request to /chat/completions in 0.949567 seconds
+2026-06-13 01:25:21,783  INFO      Retrying request to /chat/completions in 0.773367 seconds
+2026-06-13 01:25:21,853  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:21,856  INFO      Retrying request to /chat/completions in 0.497437 seconds
+2026-06-13 01:25:22,103  WARNING   No valid MX record (domain cannot receive emails), skipping: Dozee -> hr@dozee.health
+2026-06-13 01:25:22,208  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,209  INFO      Retrying request to /chat/completions in 0.849751 seconds
+2026-06-13 01:25:22,510  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,511  INFO      Retrying request to /chat/completions in 0.897299 seconds
+2026-06-13 01:25:22,602  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,602  WARNING     Generation retry 1/2 for Postman: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.1s
+2026-06-13 01:25:22,640  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,642  INFO      Retrying request to /chat/completions in 0.379301 seconds
+2026-06-13 01:25:22,642  INFO      Retrying request to /chat/completions in 0.457218 seconds
+2026-06-13 01:25:22,650  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,650  WARNING     Generation retry 2/2 for BrowserStack: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.1s
+2026-06-13 01:25:22,663  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,664  WARNING     Generation retry 1/2 for Postman: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.7s
+2026-06-13 01:25:22,833  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,833  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:22,835  WARNING     Generation retry 2/2 for BrowserStack: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.9s
+2026-06-13 01:25:23,231  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:23,234  INFO      Retrying request to /chat/completions in 0.755203 seconds
+2026-06-13 01:25:23,234  WARNING     Darwinbox: Using template fallback (LLM generation failed)
+2026-06-13 01:25:23,236  INFO        Fetching web context for Druva from https://druva.com...
+2026-06-13 01:25:23,238  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:23,240  INFO      Retrying request to /chat/completions in 0.913774 seconds
+2026-06-13 01:25:23,539  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:23,541  WARNING     Generation retry 2/2 for Uber: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.5s
+2026-06-13 01:25:24,107  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:24,107  WARNING     Generation retry 2/2 for Uber: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.0s
+2026-06-13 01:25:24,266  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:24,266  WARNING     Innovaccer: Using template fallback (LLM generation failed)
+2026-06-13 01:25:24,266  INFO        Fetching web context for Chargebee from https://chargebee.com...
+2026-06-13 01:25:24,562  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:24,562  INFO      Retrying request to /chat/completions in 0.461121 seconds
+2026-06-13 01:25:24,815  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:24,815  INFO      Retrying request to /chat/completions in 0.482406 seconds
+2026-06-13 01:25:24,824  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:24,824  INFO      Retrying request to /chat/completions in 0.465235 seconds
+2026-06-13 01:25:24,997  WARNING   No valid MX record (domain cannot receive emails), skipping: FPL Tech -> hr@fpltech.com
+2026-06-13 01:25:25,180  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:25,180  INFO      Retrying request to /chat/completions in 0.939195 seconds
+2026-06-13 01:25:25,370  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:25,370  INFO      Retrying request to /chat/completions in 0.913583 seconds
+2026-06-13 01:25:25,417  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:25,418  INFO      Retrying request to /chat/completions in 0.835676 seconds
+2026-06-13 01:25:25,652  WARNING   No valid MX record (domain cannot receive emails), skipping: Vogo -> hr@vogo.in
+2026-06-13 01:25:25,895  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:25,897  INFO      Retrying request to /chat/completions in 0.440690 seconds
+2026-06-13 01:25:26,208  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:26,211  WARNING     Generation retry 2/2 for Postman: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.6s
+2026-06-13 01:25:26,347  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:26,349  WARNING     Generation retry 2/2 for Postman: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.4s
+2026-06-13 01:25:26,407  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:26,421  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:26,422  INFO      Retrying request to /chat/completions in 0.860610 seconds
+2026-06-13 01:25:27,083  INFO        Chargebee: Generating 2 variants in parallel...
+2026-06-13 01:25:27,225  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:27,225  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:27,225  INFO      Retrying request to /chat/completions in 0.384457 seconds
+2026-06-13 01:25:27,225  INFO      Retrying request to /chat/completions in 0.418233 seconds
+2026-06-13 01:25:27,387  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:27,424  WARNING     BrowserStack: Using template fallback (LLM generation failed)
+2026-06-13 01:25:27,430  INFO        Druva: Generating 2 variants in parallel...
+2026-06-13 01:25:27,444  INFO        Fetching web context for MindTickle from https://mindtickle.com...
+2026-06-13 01:25:27,517  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:27,520  INFO      Retrying request to /chat/completions in 0.397072 seconds
+2026-06-13 01:25:27,545  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:27,546  INFO      Retrying request to /chat/completions in 0.402828 seconds
+2026-06-13 01:25:27,728  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:27,728  INFO      Retrying request to /chat/completions in 0.890284 seconds
+2026-06-13 01:25:27,748  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:27,748  INFO      Retrying request to /chat/completions in 0.872851 seconds
+2026-06-13 01:25:27,779  WARNING   No valid MX record (domain cannot receive emails), skipping: Supr Daily -> hr@suprdaily.com
+2026-06-13 01:25:28,015  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,015  INFO      Retrying request to /chat/completions in 0.855990 seconds
+2026-06-13 01:25:28,044  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,045  INFO      Retrying request to /chat/completions in 0.891130 seconds
+2026-06-13 01:25:28,086  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,086  INFO      Retrying request to /chat/completions in 0.388601 seconds
+2026-06-13 01:25:28,353  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,354  INFO      Retrying request to /chat/completions in 0.424860 seconds
+2026-06-13 01:25:28,565  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,566  INFO      Retrying request to /chat/completions in 0.900498 seconds
+2026-06-13 01:25:28,762  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,762  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,762  WARNING     Generation retry 1/2 for Chargebee: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.4s
+2026-06-13 01:25:28,762  WARNING     Generation retry 1/2 for Chargebee: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.9s
+2026-06-13 01:25:28,863  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,863  INFO      Retrying request to /chat/completions in 0.809744 seconds
+2026-06-13 01:25:28,885  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,885  INFO      Retrying request to /chat/completions in 0.415053 seconds
+2026-06-13 01:25:28,966  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:28,966  WARNING     Generation retry 1/2 for Druva: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.0s
+2026-06-13 01:25:29,004  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,004  WARNING     Generation retry 1/2 for Druva: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.8s
+2026-06-13 01:25:29,142  INFO        MindTickle: Generating 2 variants in parallel...
+2026-06-13 01:25:29,274  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,274  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,275  INFO      Retrying request to /chat/completions in 0.397237 seconds
+2026-06-13 01:25:29,275  INFO      Retrying request to /chat/completions in 0.415387 seconds
+2026-06-13 01:25:29,463  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,464  INFO      Retrying request to /chat/completions in 0.925609 seconds
+2026-06-13 01:25:29,578  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,768  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,768  INFO      Retrying request to /chat/completions in 0.893668 seconds
+2026-06-13 01:25:29,772  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,775  WARNING     Uber: Using template fallback (LLM generation failed)
+2026-06-13 01:25:29,780  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,780  INFO      Retrying request to /chat/completions in 0.476914 seconds
+2026-06-13 01:25:29,789  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:29,789  INFO        DRY-RUN: Two99
+o /chat/completions in 0.947736 seconds
+2026-06-13 01:25:29,797  INFO        DRY-RUN: Uber
+2026-06-13 01:25:29,798  INFO      Structured JSON run report written to C:\code\auto mailer\run_report_20260613_012529.json
+2026-06-13 01:25:29,799  INFO      Markdown summary report written to C:\code\auto mailer\run_report_20260613_012529.md
+2026-06-13 01:25:29,800  INFO      Checkpoint file cleaned up.
+2026-06-13 01:25:30,000  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,000  INFO      Retrying request to /chat/completions in 0.460832 seconds
+2026-06-13 01:25:30,208  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,208  INFO      Retrying request to /chat/completions in 0.486915 seconds
+2026-06-13 01:25:30,429  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,429  INFO      Retrying request to /chat/completions in 0.459458 seconds
+2026-06-13 01:25:30,442  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,442  INFO      Retrying request to /chat/completions in 0.770341 seconds
+2026-06-13 01:25:30,470  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,602  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,605  INFO      Retrying request to /chat/completions in 0.772764 seconds
+2026-06-13 01:25:30,753  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,753  WARNING     Generation retry 1/2 for MindTickle: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.7s
+2026-06-13 01:25:30,793  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,793  INFO      Retrying request to /chat/completions in 0.810061 seconds
+2026-06-13 01:25:30,820  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,820  WARNING     Generation retry 1/2 for MindTickle: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.1s
+2026-06-13 01:25:30,870  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:30,872  INFO      Retrying request to /chat/completions in 0.417569 seconds
+2026-06-13 01:25:31,015  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:31,017  INFO      Retrying request to /chat/completions in 0.872657 seconds
+2026-06-13 01:25:31,303  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:31,304  WARNING     Generation retry 2/2 for Chargebee: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.2s
+2026-06-13 01:25:31,389  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:31,390  INFO      Retrying request to /chat/completions in 0.900586 seconds
+2026-06-13 01:25:31,465  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:31,466  WARNING     Generation retry 2/2 for Druva: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.7s
+2026-06-13 01:25:31,731  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:31,731  WARNING     Generation retry 2/2 for Druva: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 4.4s
+2026-06-13 01:25:31,973  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:31,979  WARNING     Generation retry 2/2 for Chargebee: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.8s
+2026-06-13 01:25:32,146  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:32,147  INFO      Retrying request to /chat/completions in 0.380225 seconds
+2026-06-13 01:25:32,447  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:32,449  WARNING     Postman: Using template fallback (LLM generation failed)
+2026-06-13 01:25:32,450  INFO        Fetching web context for Zenoti from https://zenoti.com...
+2026-06-13 01:25:32,578  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:32,579  INFO      Retrying request to /chat/completions in 0.474807 seconds
+2026-06-13 01:25:32,653  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:32,653  INFO      Retrying request to /chat/completions in 0.845111 seconds
+2026-06-13 01:25:33,164  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:33,164  INFO      Retrying request to /chat/completions in 0.879207 seconds
+2026-06-13 01:25:33,474  WARNING   Duplicate email within CSV, skipping: Teachmint -> hr@teachmint.com
+2026-06-13 01:25:33,589  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:33,591  WARNING     Generation retry 2/2 for MindTickle: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.8s
+2026-06-13 01:25:33,659  WARNING   No valid MX record (domain cannot receive emails), skipping: Lido Learning -> hr@lidolearning.com
+2026-06-13 01:25:33,882  WARNING   Duplicate email within CSV, skipping: Unacademy -> hr@unacademy.com
+2026-06-13 01:25:33,883  WARNING   Duplicate email within CSV, skipping: Eruditus -> hr@eruditus.com
+2026-06-13 01:25:33,883  WARNING   Duplicate email within CSV, skipping: UpGrad -> hr@upgrad.com
+2026-06-13 01:25:34,130  WARNING   Duplicate email within CSV, skipping: Great Learning -> hr@greatlearning.in
+2026-06-13 01:25:34,132  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:34,134  WARNING     Generation retry 2/2 for MindTickle: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:25:34,244  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:34,246  INFO      Retrying request to /chat/completions in 0.429912 seconds
+2026-06-13 01:25:34,604  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:34,604  INFO      Retrying request to /chat/completions in 0.412622 seconds
+2026-06-13 01:25:34,803  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:34,803  INFO      Retrying request to /chat/completions in 0.808883 seconds
+2026-06-13 01:25:35,156  WARNING   Duplicate email within CSV, skipping: Udaan -> hr@udaan.com
+2026-06-13 01:25:35,156  WARNING   Duplicate email within CSV, skipping: Ninjacart -> hr@ninjacart.com
+2026-06-13 01:25:35,222  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:35,222  INFO      Retrying request to /chat/completions in 0.874464 seconds
+2026-06-13 01:25:35,725  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:35,826  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:35,852  INFO      Retrying request to /chat/completions in 0.472588 seconds
+2026-06-13 01:25:35,901  INFO        Zenoti: Generating 2 variants in parallel...
+2026-06-13 01:25:35,983  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,006  INFO      Retrying request to /chat/completions in 0.485191 seconds
+2026-06-13 01:25:36,033  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,043  INFO      Retrying request to /chat/completions in 0.387779 seconds
+2026-06-13 01:25:36,178  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,188  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,188  INFO      Retrying request to /chat/completions in 0.459107 seconds
+2026-06-13 01:25:36,341  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,341  INFO      Retrying request to /chat/completions in 0.405627 seconds
+2026-06-13 01:25:36,451  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,453  INFO      Retrying request to /chat/completions in 0.778987 seconds
+2026-06-13 01:25:36,544  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,545  INFO      Retrying request to /chat/completions in 0.977240 seconds
+2026-06-13 01:25:36,578  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,578  INFO      Retrying request to /chat/completions in 0.912250 seconds
+2026-06-13 01:25:36,721  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,721  INFO      Retrying request to /chat/completions in 0.960004 seconds
+2026-06-13 01:25:36,851  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:36,851  INFO      Retrying request to /chat/completions in 0.992277 seconds
+2026-06-13 01:25:36,905  WARNING   Duplicate email within CSV, skipping: Blue Tokai Coffee -> hr@bluetokaicoffee.com
+2026-06-13 01:25:37,159  WARNING   Duplicate email within CSV, skipping: Nykaa -> hr@nykaa.com
+2026-06-13 01:25:37,361  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:37,361  WARNING     Chargebee: Using template fallback (LLM generation failed)
+2026-06-13 01:25:37,366  INFO        Fetching web context for Amagi from https://amagi.com...
+2026-06-13 01:25:37,478  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:37,478  INFO      Retrying request to /chat/completions in 0.412118 seconds
+2026-06-13 01:25:37,669  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:37,671  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:37,671  WARNING     Generation retry 1/2 for Zenoti: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 0.8s
+2026-06-13 01:25:37,673  WARNING     Generation retry 1/2 for Zenoti: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:25:37,842  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:37,917  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:37,917  WARNING     Druva: Using template fallback (LLM generation failed)
+2026-06-13 01:25:37,917  INFO        Fetching web context for HighRadius from https://highradius.com...
+2026-06-13 01:25:37,988  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:37,990  INFO      Retrying request to /chat/completions in 0.755435 seconds
+2026-06-13 01:25:38,097  WARNING   No valid MX record (domain cannot receive emails), skipping: Peyush Bansal Group -> hr@peyushbansal.com
+2026-06-13 01:25:38,577  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:38,579  INFO      Retrying request to /chat/completions in 0.427354 seconds
+2026-06-13 01:25:38,738  WARNING   No valid MX record (domain cannot receive emails), skipping: Mitron -> hr@mitron.tv
+2026-06-13 01:25:38,876  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:38,876  WARNING     MindTickle: Using template fallback (LLM generation failed)
+2026-06-13 01:25:38,876  INFO        Fetching web context for LeadSquared from https://leadsquared.com...
+2026-06-13 01:25:39,114  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:39,114  INFO      Retrying request to /chat/completions in 0.829599 seconds
+2026-06-13 01:25:39,481  INFO        Amagi: Generating 2 variants in parallel...
+2026-06-13 01:25:39,614  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:39,614  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:39,618  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:39,618  INFO      Retrying request to /chat/completions in 0.400852 seconds
+2026-06-13 01:25:39,620  INFO      Retrying request to /chat/completions in 0.410722 seconds
+2026-06-13 01:25:39,620  INFO      Retrying request to /chat/completions in 0.486577 seconds
+2026-06-13 01:25:39,706  INFO      Skipped 21 companies with invalid email format
+2026-06-13 01:25:39,706  INFO      Skipped 15 duplicate email entries within CSV
+2026-06-13 01:25:39,713  INFO      Contact score filtering: 471 -> 471 companies (min score: 2)
+2026-06-13 01:25:39,714  INFO      Processing 2 companies  |  dry_run=True  |  model=deepseek-ai/deepseek-v4-flash  |  fallback=meta/llama-3.3-70b-instruct  |  temp=0.2 top_p=0.95  |  thinking=False reasoning_effort=none  |  avg_contact_score=9.0/10
+2026-06-13 01:25:40,061  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,103  WARNING     Generation retry 2/2 for Zenoti: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.4s
+2026-06-13 01:25:40,150  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,170  INFO      Retrying request to /chat/completions in 0.790741 seconds
+2026-06-13 01:25:40,178  INFO        HighRadius: Generating 2 variants in parallel...
+2026-06-13 01:25:40,213  INFO      [1/2] Generating email for Two99 -> hiring@two99.org
+2026-06-13 01:25:40,226  INFO        Two99: Generating 2 variants in parallel...
+2026-06-13 01:25:40,274  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,274  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,274  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,275  INFO      Retrying request to /chat/completions in 0.839983 seconds
+2026-06-13 01:25:40,275  INFO      Retrying request to /chat/completions in 0.414213 seconds
+2026-06-13 01:25:40,275  INFO      Retrying request to /chat/completions in 0.821364 seconds
+2026-06-13 01:25:40,439  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,441  INFO      Retrying request to /chat/completions in 0.409180 seconds
+2026-06-13 01:25:40,551  INFO        LeadSquared: Generating 2 variants in parallel...
+2026-06-13 01:25:40,639  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,639  INFO      Retrying request to /chat/completions in 0.414046 seconds
+2026-06-13 01:25:40,648  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,648  INFO      Retrying request to /chat/completions in 0.414399 seconds
+2026-06-13 01:25:40,787  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,789  INFO      Retrying request to /chat/completions in 0.978662 seconds
+2026-06-13 01:25:40,947  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:40,947  INFO      Retrying request to /chat/completions in 0.937275 seconds
+2026-06-13 01:25:41,045  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,045  WARNING     Generation retry 2/2 for Zenoti: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.9s
+2026-06-13 01:25:41,128  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,128  INFO      Retrying request to /chat/completions in 0.822269 seconds
+2026-06-13 01:25:41,153  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,153  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,153  INFO      Retrying request to /chat/completions in 0.916019 seconds
+2026-06-13 01:25:41,154  INFO      Retrying request to /chat/completions in 0.378697 seconds
+2026-06-13 01:25:41,182  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,183  WARNING     Generation retry 1/2 for Amagi: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:25:41,193  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,193  WARNING     Generation retry 1/2 for Amagi: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.1s
+2026-06-13 01:25:41,193  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,197  INFO      Retrying request to /chat/completions in 0.432920 seconds
+2026-06-13 01:25:41,639  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,640  INFO      Retrying request to /chat/completions in 0.780923 seconds
+2026-06-13 01:25:41,770  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,771  INFO      Retrying request to /chat/completions in 0.762603 seconds
+2026-06-13 01:25:41,870  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,870  WARNING     Generation retry 1/2 for HighRadius: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.0s
+2026-06-13 01:25:41,969  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:41,969  WARNING     Generation retry 1/2 for HighRadius: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:25:42,074  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,074  WARNING     Generation retry 1/2 for LeadSquared: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.1s
+2026-06-13 01:25:42,176  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,177  WARNING     Generation retry 1/2 for LeadSquared: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 2.2s
+2026-06-13 01:25:42,379  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,381  INFO      Retrying request to /chat/completions in 0.396017 seconds
+2026-06-13 01:25:42,495  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,497  WARNING     Generation retry 1/2 for Two99: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.5s
+2026-06-13 01:25:42,638  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,638  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,638  INFO      Retrying request to /chat/completions in 0.438542 seconds
+2026-06-13 01:25:42,638  WARNING     Generation retry 1/2 for Two99: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 1.8s
+2026-06-13 01:25:42,866  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,867  INFO      Retrying request to /chat/completions in 0.908901 seconds
+2026-06-13 01:25:42,994  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:42,996  INFO      Retrying request to /chat/completions in 0.459854 seconds
+2026-06-13 01:25:43,091  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,091  INFO      Retrying request to /chat/completions in 0.488053 seconds
+2026-06-13 01:25:43,200  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,201  INFO      Retrying request to /chat/completions in 0.911236 seconds
+2026-06-13 01:25:43,214  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,214  INFO      Retrying request to /chat/completions in 0.430010 seconds
+2026-06-13 01:25:43,588  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,588  INFO      Retrying request to /chat/completions in 0.756869 seconds
+2026-06-13 01:25:43,711  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,714  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,714  INFO      Retrying request to /chat/completions in 0.817948 seconds
+2026-06-13 01:25:43,714  INFO      Retrying request to /chat/completions in 0.860004 seconds
+2026-06-13 01:25:43,912  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,912  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:43,916  INFO      Retrying request to /chat/completions in 0.376638 seconds
+2026-06-13 01:25:43,916  WARNING     Generation retry 2/2 for Amagi: Error code: 429 - {'status': 429, 'title': 'Too Many Requests'} | sleeping 3.1s
+2026-06-13 01:25:44,029  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:44,031  INFO      Retrying request to /chat/completions in 0.378178 seconds
+2026-06-13 01:25:44,130  INFO      HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-13 01:25:44,132  INFO      Retrying request to /chat/completions in 0.378425 seconds
