@@ -9,6 +9,7 @@ It is heavily optimized for deliverability, preventing spam penalties through ad
 ### 🧠 Agentic Personalization
 - **Web Context Scraping:** Automatically visits the target company's domain, scraping `<title>` and `<meta name="description">` to inject real-world context into the LLM prompt.
 - **Dynamic Prompting:** Fuses your markdown `about_me.md` profile with the target company's dataset (Domain, Region, specific Notes) for hyper-personalized output.
+- **Multi-Provider Zero-Downtime Cascade:** Load up to 10 API keys across NVIDIA NIM, Groq, OpenRouter, Google Gemini, and Cerebras simultaneously. If a provider hits a rate limit or exhausts its free tier, the system instantly quarantines it and routes workload to the next healthy provider in the pool.
 - **Intelligent Fallbacks:** Uses a primary LLM model (e.g., Llama 3.3 70B Instruct) and falls back to a faster/simpler model (like Mixtral) on reasoning timeouts or JSON malformations. Finally, defaults to a clean static template if all LLM attempts fail.
 
 ### 🧪 Multi-Variant Generation & Quality Gating
@@ -41,27 +42,31 @@ pip install -r requirements.txt
 2. **Configure Environment**
 Create a `.env` file in the root directory (use `.env.example` as a template):
 ```env
-# Example using NVIDIA NIM (Default)
+# Primary Provider (e.g., NVIDIA NIM)
 LLM_API_KEY=nvapi-your-key-here
 LLM_BASE_URL=https://integrate.api.nvidia.com/v1
 LLM_MODEL=meta/llama-3.3-70b-instruct
 LLM_FALLBACK_MODEL=mistralai/mixtral-8x22b-instruct-v0.1
 
-# Example using Groq
-# LLM_API_KEY=gsk_your-key-here
-# LLM_BASE_URL=https://api.groq.com/openai/v1
-# LLM_MODEL=llama-3.3-70b-versatile
+# 🔄 Multi-Provider Auto-Switching (Fallback 1: Groq)
+LLM_2_API_KEY=gsk_your_groq_key_here
+LLM_2_BASE_URL=https://api.groq.com/openai/v1
+LLM_2_MODEL=llama-3.3-70b-versatile
 
-# Example using Google Gemini
-# LLM_API_KEY=AIzaSy...
-# LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
-# LLM_MODEL=gemini-2.5-flash
+# 🔄 Multi-Provider Auto-Switching (Fallback 2: OpenRouter)
+LLM_3_API_KEY=sk-or-v1-your_openrouter_key
+LLM_3_BASE_URL=https://openrouter.ai/api/v1
+LLM_3_MODEL=meta-llama/llama-3.3-70b-instruct
+
+# Add up to 10 fallback providers (LLM_4, LLM_5, etc.)
 
 SENDER_NAME="Your Name"
 SENDER_EMAIL=your.email@gmail.com
 SENDER_APP_PASSWORD=your_gmail_app_password
 ```
 > **Note:** If using Gmail, you must use an [App Password](https://myaccount.google.com/apppasswords) with 2FA enabled, not your raw account password.
+>
+> **Zero-Downtime Cascade:** The pipeline dynamically scans for up to 10 providers in your `.env`. If any provider hits a `429 Too Many Requests` limit, the script instantly quarantines it for 10 minutes and seamlessly reroutes all worker threads to the next healthy provider in the pool.
 
 3. **Populate Core Assets**
 - `hr_emails_directory.csv`: A CSV containing columns `Company`, `Email`, `Tag`, `Region`, `Note`.
