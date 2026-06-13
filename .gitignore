@@ -2,3 +2,7 @@
 /.claude
 /__pycache__
 /auto-mailer
+*.json
+run_report_*
+*.csv
+mailer.log

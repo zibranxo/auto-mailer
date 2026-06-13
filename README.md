@@ -1,6 +1,6 @@
-# Agentic Cold Mailer (NVIDIA NIM + Web Scraping) 🚀
+# Agentic Cold Mailer (LLM Agnostic + Web Scraping) 🚀
 
-A production-grade, highly intelligent automated cold-emailing pipeline. Built for AI/ML engineering roles (or easily adaptable for any role), this system autonomously researches companies, generates highly personalized and optimized cold outreach emails using **NVIDIA NIM APIs**, filters them through a stringent internal quality gating system, and safely delivers them via SMTP.
+A production-grade, highly intelligent automated cold-emailing pipeline. Built for AI/ML engineering roles (or easily adaptable for any role), this system autonomously researches companies, generates highly personalized and optimized cold outreach emails using **Any OpenAI-Compatible LLM Provider** (NVIDIA NIM, Groq, OpenRouter, Cerebras, Fireworks, Google Gemini, OpenAI, etc.), filters them through a stringent internal quality gating system, and safely delivers them via SMTP.
 
 It is heavily optimized for deliverability, preventing spam penalties through advanced rate-limiting, DNS validation, IMAP bounce tracking, and exponential backoff mechanisms.
 
@@ -9,7 +9,7 @@ It is heavily optimized for deliverability, preventing spam penalties through ad
 ### 🧠 Agentic Personalization
 - **Web Context Scraping:** Automatically visits the target company's domain, scraping `<title>` and `<meta name="description">` to inject real-world context into the LLM prompt.
 - **Dynamic Prompting:** Fuses your markdown `about_me.md` profile with the target company's dataset (Domain, Region, specific Notes) for hyper-personalized output.
-- **Intelligent Fallbacks:** Uses a primary NIM model (e.g., Llama 3.3 70B Instruct) and falls back to a faster/simpler model (like Mixtral) on reasoning timeouts or JSON malformations. Finally, defaults to a clean static template if all LLM attempts fail.
+- **Intelligent Fallbacks:** Uses a primary LLM model (e.g., Llama 3.3 70B Instruct) and falls back to a faster/simpler model (like Mixtral) on reasoning timeouts or JSON malformations. Finally, defaults to a clean static template if all LLM attempts fail.
 
 ### 🧪 Multi-Variant Generation & Quality Gating
 - **A/B Testing on the Fly:** Configure `--variant-count N` to generate `N` different email variants in parallel.
@@ -41,9 +41,21 @@ pip install -r requirements.txt
 2. **Configure Environment**
 Create a `.env` file in the root directory (use `.env.example` as a template):
 ```env
-NIM_API_KEY=nvapi-your-key-here
-NIM_MODEL=meta/llama-3.3-70b-instruct
-NIM_FALLBACK_MODEL=mistralai/mixtral-8x22b-instruct-v0.1
+# Example using NVIDIA NIM (Default)
+LLM_API_KEY=nvapi-your-key-here
+LLM_BASE_URL=https://integrate.api.nvidia.com/v1
+LLM_MODEL=meta/llama-3.3-70b-instruct
+LLM_FALLBACK_MODEL=mistralai/mixtral-8x22b-instruct-v0.1
+
+# Example using Groq
+# LLM_API_KEY=gsk_your-key-here
+# LLM_BASE_URL=https://api.groq.com/openai/v1
+# LLM_MODEL=llama-3.3-70b-versatile
+
+# Example using Google Gemini
+# LLM_API_KEY=AIzaSy...
+# LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+# LLM_MODEL=gemini-2.5-flash
 
 SENDER_NAME="Your Name"
 SENDER_EMAIL=your.email@gmail.com
@@ -77,9 +89,9 @@ python mailer.py --filter-region India --filter-tag Fintech --limit 10
 ```
 
 ### Full Production Run
-A fully optimized production run, complete with deliverability checks, multi-variants, web research, and live telemetry:
+A fully optimized production run, complete with deliverability checks, multi-variants, web research, live telemetry, and API rate limit protections:
 ```bash
-python mailer.py --company-research --variant-count 2 --check-bounces --workers 4 --health-port 8080
+python mailer.py --company-research --variant-count 2 --check-bounces --workers 4 --health-port 8080 --slowmode
 ```
 
 ### Resuming From Crashes
@@ -106,6 +118,7 @@ python mailer.py --resume
 | `--filter-tag` | Only process companies with a specific domain tag (e.g., `AI/ML`). | `None` |
 | `--min-contact-score`| Minimum internal contact relevance score (0-10) to process. | `2` |
 | `--min-quality-score`| Minimum internal AI draft quality score (0-100) required to send. | `70` |
+| `--slowmode` | Enforces a strict 30 requests/minute LLM rate limit to prevent API exhaustion. | `False` |
 | `--resume` | Resume execution securely using `.mailer_checkpoint.json`. | `False` |
 
 ---
@@ -124,7 +137,7 @@ python mailer.py --resume
 
 ## 💡 Best Practices
 1. **Always Dry-Run First**: Make it a habit to use `--dry-run --company-research --variant-count 2` when testing a new `about_me.md` iteration.
-2. **Tune Temperature**: Set `NIM_TEMPERATURE` in your `.env` to around `0.6` for creative cold outreach, but keep it below `0.8` to prevent hallucinations.
+2. **Tune Temperature**: Set `LLM_TEMPERATURE` in your `.env` to around `0.6` for creative cold outreach, but keep it below `0.8` to prevent hallucinations.
 3. **Monitor the Queue**: Failed quality-gate emails get stored in `low_quality_queue.json`. Periodically inspect this file to tune your internal `calculate_quality_score()` heuristic weights inside `mailer.py`.
 
 *Disclaimer: Ensure compliance with CAN-SPAM, GDPR, or applicable local outreach regulations when sending unsolicited emails.*

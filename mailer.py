@@ -64,13 +64,13 @@ COMPANY_CACHE = BASE_DIR / "company_context_cache.json"
 
 
 # ── Config from .env ──────────────────────────────────────────────────────────
-NIM_API_KEY   = os.getenv("NIM_API_KEY")
-NIM_BASE_URL  = os.getenv("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-NIM_MODEL     = os.getenv("NIM_MODEL", "meta/llama-3.3-70b-instruct")
-NIM_FALLBACK_MODEL = os.getenv("NIM_FALLBACK_MODEL", "deepseek-ai/deepseek-v4-flash")
-NIM_TEMPERATURE = float(os.getenv("NIM_TEMPERATURE", "0.2"))
-NIM_TOP_P = float(os.getenv("NIM_TOP_P", "0.95"))
-NIM_REASONING_EFFORT = os.getenv("NIM_REASONING_EFFORT", "low").strip().lower()
+LLM_API_KEY   = os.getenv("LLM_API_KEY")
+LLM_BASE_URL  = os.getenv("LLM_BASE_URL", "https://integrate.api.nvidia.com/v1")
+LLM_MODEL     = os.getenv("LLM_MODEL", "meta/llama-3.3-70b-instruct")
+LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "deepseek-ai/deepseek-v4-flash")
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
+LLM_TOP_P = float(os.getenv("LLM_TOP_P", "0.95"))
+LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "low").strip().lower()
 
 SENDER_EMAIL  = os.getenv("SENDER_EMAIL")
 SENDER_PASS   = os.getenv("SENDER_APP_PASSWORD")   # Gmail app password
@@ -98,7 +98,37 @@ _delay_decay_factor = 0.9  # Gradually decrease delay after success
 _consecutive_successes = 0
 _consecutive_errors = 0
 
+from dataclasses import dataclass, field
+from openai import OpenAI
 
+@dataclass
+class LLMProvider:
+    name: str
+    client: OpenAI
+    model: str
+    fallback_model: str
+    exhausted_until: float = 0.0
+    last_inference_time: float = 0.0
+    lock: threading.Lock = field(default_factory=threading.Lock)
+
+_provider_pool: list[LLMProvider] = []
+_provider_pool_lock = threading.Lock()
+
+def get_active_provider() -> LLMProvider:
+    with _provider_pool_lock:
+        while True:
+            now = time.time()
+            # Try to find a healthy provider
+            for p in _provider_pool:
+                if now >= p.exhausted_until:
+                    return p
+            
+            # All providers are exhausted! Wait for the soonest one to recover.
+            earliest_wake = min(p.exhausted_until for p in _provider_pool)
+            sleep_time = earliest_wake - now
+            if sleep_time > 0:
+                log.warning(f"All LLM providers are rate-limited. Sleeping for {sleep_time:.1f}s...")
+                time.sleep(sleep_time)
 def _env_bool(name: str, default: bool | None = None) -> bool | None:
     raw = os.getenv(name)
     if raw is None:
@@ -272,7 +302,7 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
 
 
 
-NIM_THINKING = _env_bool("NIM_THINKING", False)
+LLM_THINKING = _env_bool("LLM_THINKING", False)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -352,7 +382,7 @@ def check_api_health(client: OpenAI, model: str = None, timeout: float = 10) -> 
     """Test if the API is responsive before starting a batch."""
     try:
         response = client.chat.completions.create(
-            model=model or NIM_MODEL,
+            model=model or LLM_MODEL,
             messages=[{"role": "user", "content": "Hi"}],
             max_tokens=5,
             timeout=timeout,
@@ -360,7 +390,7 @@ def check_api_health(client: OpenAI, model: str = None, timeout: float = 10) -> 
         if response and response.choices and response.choices[0].message:
             return True
     except Exception as e:
-        log.warning(f"API health check failed for {model or NIM_MODEL}: {e}")
+        log.warning(f"API health check failed for {model or LLM_MODEL}: {e}")
     return False
 
 
@@ -925,16 +955,16 @@ linkedin.com/in/arnvsr | github.com/zibranxo
 
 
 def generate_email(
-    client: OpenAI,
+    provider: LLMProvider,
     about_me: str,
     company: dict,
     max_tokens: int,
     timeout_s: float | None = None,
     model: str | None = None,
-    temperature: float = NIM_TEMPERATURE,
-    top_p: float = NIM_TOP_P,
-    thinking: bool | None = NIM_THINKING,
-    reasoning_effort: str | None = NIM_REASONING_EFFORT,
+    temperature: float = LLM_TEMPERATURE,
+    top_p: float = LLM_TOP_P,
+    thinking: bool | None = LLM_THINKING,
+    reasoning_effort: str | None = LLM_REASONING_EFFORT,
     company_context: str = "",
 ) -> dict:
     user_prompt = f"""
@@ -956,7 +986,7 @@ Write a personalized cold application email for this candidate applying to this 
 Return strictly valid JSON with keys "subject" and "body" only.
 """
     request = {
-        "model": model or NIM_MODEL,
+        "model": model or provider.model,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -978,8 +1008,16 @@ Return strictly valid JSON with keys "subject" and "body" only.
     if timeout_s is not None and timeout_s > 0:
         request["timeout"] = timeout_s
 
+    # Apply pacing per-provider
+    with provider.lock:
+        now = time.time()
+        elapsed = now - provider.last_inference_time
+        if elapsed < 2.5:
+            time.sleep(2.5 - elapsed)
+        provider.last_inference_time = max(provider.last_inference_time, time.time())
+
     try:
-        response = client.chat.completions.create(**request)
+        response = provider.client.chat.completions.create(**request)
     except Exception as e:
         # Some providers/models may not support response_format / chat_template_kwargs
         err = str(e).lower()
@@ -1029,7 +1067,6 @@ def _is_fatal_llm_error(e: Exception) -> bool:
 
 
 def generate_email_with_retry(
-    client: OpenAI,
     about_me: str,
     company: dict,
     max_tokens: int,
@@ -1046,14 +1083,15 @@ def generate_email_with_retry(
     attempts = max_retries + 1
 
     for attempt in range(1, attempts + 1):
+        provider = get_active_provider()
         try:
             return generate_email(
-                client,
+                provider,
                 about_me,
                 company,
                 max_tokens=max_tokens,
                 timeout_s=timeout_s,
-                model=NIM_MODEL,
+                model=provider.model,
                 temperature=temperature,
                 top_p=top_p,
                 thinking=thinking,
@@ -1064,24 +1102,29 @@ def generate_email_with_retry(
             last_error = e
             error_msg = str(e).lower()
 
+            if "429" in error_msg or "too many requests" in error_msg:
+                log.warning(f"  [{company['Company']}] 429 Rate Limit hit on {provider.name}. Quarantining provider for 600s and switching...")
+                provider.exhausted_until = time.time() + 600.0
+                continue
+
             if _is_fatal_llm_error(e):
                 log.error(f"  Fatal LLM error for {company['Company']}: {e}. Aborting retries.")
                 break
 
             # Empty content / reasoning failure → try fallback model immediately
-            if NIM_FALLBACK_MODEL and NIM_FALLBACK_MODEL != NIM_MODEL:
+            if provider.fallback_model and provider.fallback_model != provider.model:
                 if any(k in error_msg for k in ["reasoning consumed tokens", "empty content", "none", "timed out", "timeout"]):
                     log.warning(
-                        f"  {company['Company']}: primary model failed; trying fallback '{NIM_FALLBACK_MODEL}'"
+                        f"  {company['Company']}: primary model failed; trying fallback '{provider.fallback_model}' on {provider.name}"
                     )
                     try:
                         return generate_email(
-                            client,
+                            provider,
                             about_me,
                             company,
                             max_tokens=max_tokens,
                             timeout_s=timeout_s,
-                            model=NIM_FALLBACK_MODEL,
+                            model=provider.fallback_model,
                             temperature=temperature,
                             top_p=top_p,
                             thinking=thinking,
@@ -1093,18 +1136,18 @@ def generate_email_with_retry(
                         log.warning(f"  {company['Company']}: fallback also failed: {fallback_e}")
 
             # JSON parse failure can sometimes be fixed with simpler prompt on fallback
-            if NIM_FALLBACK_MODEL and NIM_FALLBACK_MODEL != NIM_MODEL and "json" in error_msg:
+            if provider.fallback_model and provider.fallback_model != provider.model and "json" in error_msg:
                 log.warning(
-                    f"  {company['Company']}: JSON parse failed; retrying with fallback '{NIM_FALLBACK_MODEL}' (no JSON format)"
+                    f"  {company['Company']}: JSON parse failed; retrying with fallback '{provider.fallback_model}' on {provider.name} (no JSON format)"
                 )
                 try:
                     return generate_email(
-                        client,
+                        provider,
                         about_me,
                         company,
                         max_tokens=max_tokens,
                         timeout_s=timeout_s,
-                        model=NIM_FALLBACK_MODEL,
+                        model=provider.fallback_model,
                         temperature=0.1,  # Lower temperature for more deterministic output
                         top_p=0.9,
                         thinking=False,
@@ -1128,6 +1171,9 @@ def generate_email_with_retry(
             )
             time.sleep(sleep_s)
 
+    if last_error:
+        raise last_error
+    raise ValueError("generate_email_with_retry failed but last_error was None")
 
 LOW_QUALITY_QUEUE = BASE_DIR / "low_quality_queue.json"
 
@@ -1199,7 +1245,6 @@ def log_low_quality(company: dict, email_data: dict, score: int):
 
 
 def generate_and_gate_email(
-    client: OpenAI,
     about_me: str,
     company: dict,
     max_tokens: int,
@@ -1219,7 +1264,7 @@ def generate_and_gate_email(
     if variant_count <= 1:
         # Standard single generation path
         result = generate_email_with_retry(
-            client, about_me, company, max_tokens, timeout_s, max_retries,
+            about_me, company, max_tokens, timeout_s, max_retries,
             backoff_base, temperature, top_p, thinking, reasoning_effort, company_context
         )
         if result.get("template"):
@@ -1239,7 +1284,7 @@ def generate_and_gate_email(
             var_temp = min(1.0, temperature + (i * 0.1))
             try:
                 res = generate_email_with_retry(
-                    client, about_me, company, max_tokens, timeout_s, max_retries,
+                    about_me, company, max_tokens, timeout_s, max_retries,
                     backoff_base, var_temp, top_p, thinking, reasoning_effort, company_context
                 )
                 if not res.get("template"):
@@ -1271,13 +1316,14 @@ def generate_and_gate_email(
     log.warning(f"  {company['Company']}: Draft quality score low ({score}/{min_quality_score}). Attempting regeneration with strict prompt...")
     
     try:
+        provider = get_active_provider()
         strict_result = generate_email(
-            client,
+            provider,
             about_me,
             company,
             max_tokens=max_tokens,
             timeout_s=timeout_s,
-            model=NIM_MODEL,
+            model=provider.model,
             temperature=0.1,
             top_p=0.9,
             thinking=False,
@@ -1474,19 +1520,21 @@ def main():
                         help="Base backoff seconds for retries (exponential)")
     parser.add_argument("--max-tokens",     type=int, default=GEN_MAX_TOKENS,
                         help=f"Max tokens for generated email (default: {GEN_MAX_TOKENS})")
-    parser.add_argument("--temperature",    type=float, default=NIM_TEMPERATURE,
-                        help=f"LLM temperature (default: {NIM_TEMPERATURE})")
-    parser.add_argument("--top-p",          type=float, default=NIM_TOP_P,
-                        help=f"LLM top_p (default: {NIM_TOP_P})")
-    parser.add_argument("--thinking", action=argparse.BooleanOptionalAction, default=NIM_THINKING,
-                        help=f"Enable/disable model thinking mode (default from env: {NIM_THINKING})")
-    parser.add_argument("--reasoning-effort", type=str, default=NIM_REASONING_EFFORT,
+    parser.add_argument("--temperature",    type=float, default=LLM_TEMPERATURE,
+                        help=f"LLM temperature (default: {LLM_TEMPERATURE})")
+    parser.add_argument("--top-p",          type=float, default=LLM_TOP_P,
+                        help=f"LLM top_p (default: {LLM_TOP_P})")
+    parser.add_argument("--thinking", action=argparse.BooleanOptionalAction, default=LLM_THINKING,
+                        help=f"Enable/disable model thinking mode (default from env: {LLM_THINKING})")
+    parser.add_argument("--reasoning-effort", type=str, default=LLM_REASONING_EFFORT,
                         choices=["none", "low", "medium", "high"],
-                        help=f"Reasoning effort level (default: {NIM_REASONING_EFFORT})")
+                        help=f"Reasoning effort level (default: {LLM_REASONING_EFFORT})")
     parser.add_argument("--min-contact-score", type=int, default=2,
                         help="Minimum contact score to process (0-10, default: 2)")
     parser.add_argument("--min-quality-score", type=int, default=70,
                         help="Minimum email quality score to allow sending (0-100, default: 70)")
+    parser.add_argument("--slowmode", action="store_true",
+                        help="Enforce a strict 30 requests/minute LLM rate limit")
     parser.add_argument("--resume", action="store_true",
                         help="Resume from the latest checkpoint file if available")
     parser.add_argument("--company-research", action="store_true",
@@ -1519,7 +1567,7 @@ def main():
 
     # ── Validate env ──────────────────────────────────────────────────────────
     missing = []
-    if not NIM_API_KEY:   missing.append("NIM_API_KEY")
+    if not LLM_API_KEY:   missing.append("LLM_API_KEY")
     if not args.dry_run:
         if not SENDER_EMAIL: missing.append("SENDER_EMAIL")
         if not SENDER_PASS:  missing.append("SENDER_APP_PASSWORD")
@@ -1572,9 +1620,7 @@ def main():
         domain = email.split("@")[1]
         if args.check_mx:
             if not has_valid_mx_record(domain):
-                invalid_email_count += 1
-                log.warning(f"No valid MX record (domain cannot receive emails), skipping: {company['Company']} -> {email}")
-                continue
+                log.warning(f"No valid MX record detected for {domain}, but proceeding anyway: {company['Company']} -> {email}")
 
         # Check for duplicates within CSV
         if email in seen_emails:
@@ -1665,8 +1711,8 @@ def main():
         score_info = ""
 
     log.info(
-        f"Processing {len(companies)} companies  |  dry_run={args.dry_run}  |  model={NIM_MODEL}"
-        f"  |  fallback={NIM_FALLBACK_MODEL or 'none'}"
+        f"Processing {len(companies)} companies  |  dry_run={args.dry_run}  |  model={LLM_MODEL}"
+        f"  |  fallback={LLM_FALLBACK_MODEL or 'none'}"
         f"  |  temp={args.temperature} top_p={args.top_p}"
         f"  |  thinking={args.thinking} reasoning_effort={args.reasoning_effort}"
         f"{score_info}"
@@ -1680,8 +1726,33 @@ def main():
             log.info("Aborted by user.")
             return
 
-    # ── NIM client ────────────────────────────────────────────────────────────
-    nim = OpenAI(api_key=NIM_API_KEY, base_url=NIM_BASE_URL)
+    # ── Multi-Provider Initialization ─────────────────────────────────────────
+    global _provider_pool
+    _provider_pool.clear()
+
+    if LLM_API_KEY:
+        _provider_pool.append(LLMProvider(
+            name="Primary",
+            client=OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL, max_retries=0),
+            model=LLM_MODEL,
+            fallback_model=LLM_FALLBACK_MODEL
+        ))
+        
+    for i in range(2, 11):
+        key = os.getenv(f"LLM_{i}_API_KEY")
+        if key:
+            _provider_pool.append(LLMProvider(
+                name=f"Provider_{i}",
+                client=OpenAI(api_key=key, base_url=os.getenv(f"LLM_{i}_BASE_URL"), max_retries=0),
+                model=os.getenv(f"LLM_{i}_MODEL", LLM_MODEL),
+                fallback_model=os.getenv(f"LLM_{i}_FALLBACK_MODEL", LLM_FALLBACK_MODEL)
+            ))
+            
+    if not _provider_pool:
+        log.error("No LLM providers configured. Please set LLM_API_KEY in your .env.")
+        return
+        
+    log.info(f"Loaded {len(_provider_pool)} LLM providers: {', '.join(p.name for p in _provider_pool)}")
 
     # ── Generate (optionally parallel) ────────────────────────────────────────
     workers = max(1, args.workers)
@@ -1692,7 +1763,6 @@ def main():
                 domain = company["Email"].split("@")[-1]
                 ctx = fetch_company_context(company["Company"], domain) if args.company_research else ""
                 return generate_and_gate_email(
-                    nim,
                     about_me,
                     company,
                     args.max_tokens,
@@ -1723,10 +1793,12 @@ def main():
                     generated[idx] = future.result()
                     stats["generation_success"] += 1
                     log.info(f"[{idx}/{len(companies)}] Generated email for {co_name}")
+                    save_checkpoint(start_idx - 1, generated, sent_log)
                 except Exception as e:
                     stats["generation_failed"] += 1
                     failures.append({"company": co_name, "email": to_addr, "stage": "generation", "error_message": str(e)})
                     log.error(f"[{idx}/{len(companies)}] Generation failed for {co_name}: {e}")
+                    save_checkpoint(start_idx - 1, generated, sent_log)
     else:
         for idx, company in enumerate(companies, start=1):
             if idx < start_idx or idx in generated:
@@ -1738,7 +1810,6 @@ def main():
             ctx = fetch_company_context(co_name, domain) if args.company_research else ""
             try:
                 generated[idx] = generate_and_gate_email(
-                    nim,
                     about_me,
                     company,
                     args.max_tokens,
@@ -1754,10 +1825,12 @@ def main():
                     variant_count=args.variant_count,
                 )
                 stats["generation_success"] += 1
+                save_checkpoint(start_idx - 1, generated, sent_log)
             except Exception as e:
                 stats["generation_failed"] += 1
                 failures.append({"company": co_name, "email": to_addr, "stage": "generation", "error_message": str(e)})
                 log.error(f"  Generation failed for {co_name}: {e}")
+                save_checkpoint(start_idx - 1, generated, sent_log)
 
     # ── Preview + send (sequential) ───────────────────────────────────────────
     success_count = 0

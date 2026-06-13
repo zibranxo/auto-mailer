@@ -1,7 +1,7 @@
 # Arnav Sagar — Profile
 
 ## Contact
-- **Email:** arnavsagar1510@gmail.com  
+- **Email:** arnavsagar1510@gmail.com   
 - **Phone:** +91-6284962948  
 - **GitHub:** github.com/zibranxo  
 - **LinkedIn:** linkedin.com/in/arnvsr  
