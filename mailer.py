@@ -1469,16 +1469,14 @@ def load_checkpoint() -> Optional[dict]:
 def save_checkpoint(last_idx: int, generated_cache: dict, sent_log_snapshot: dict):
     """Save run state checkpoint to file."""
     try:
-        # Convert integer keys to string for JSON serialization
-        serialized_gen = {str(k): v for k, v in generated_cache.items()}
         data = {
             "last_processed_index": last_idx,
-            "generated_cache": serialized_gen,
+            "generated_cache_by_email": generated_cache,
             "sent_log_snapshot": sent_log_snapshot,
             "timestamp": datetime.now().isoformat()
         }
         CHECKPOINT_FILE.write_text(json.dumps(data, indent=2))
-        log.debug(f"Saved checkpoint at index {last_idx}")
+        log.debug(f"Saved checkpoint")
     except Exception as e:
         log.error(f"Failed to save checkpoint: {e}")
 
@@ -1684,20 +1682,16 @@ def main():
     stats["total_processed"] = len(companies)
 
     generated = {}
-    start_idx = 1
     if args.resume:
         checkpoint = load_checkpoint()
         if checkpoint:
-            cached_gen = checkpoint.get("generated_cache", {})
-            # Restore generated cache
-            generated = {int(k): v for k, v in cached_gen.items()}
-            start_idx = checkpoint.get("last_processed_index", 0) + 1
+            generated = checkpoint.get("generated_cache_by_email", {})
             snapshot = checkpoint.get("sent_log_snapshot", {})
             if snapshot:
                 # Normalize keys
                 normalized_snapshot = {k.strip().lower(): v for k, v in snapshot.items() if k}
                 sent_log.update(normalized_snapshot)
-            log.info(f"Resuming run from index {start_idx} (loaded {len(generated)} cached generations)")
+            log.info(f"Resuming run (loaded {len(generated)} cached generations)")
 
     if not companies:
         log.info("No companies to process.")
@@ -1779,37 +1773,38 @@ def main():
                 )
 
             futures = {
-                pool.submit(process_company, company): idx
+                pool.submit(process_company, company): company
                 for idx, company in enumerate(companies, start=1)
-                if idx >= start_idx and idx not in generated
+                if company["Email"].strip().lower() not in generated
             }
 
             for future in as_completed(futures):
-                idx = futures[future]
-                company = companies[idx - 1]
+                company = futures[future]
                 co_name = company["Company"].strip()
                 to_addr = company["Email"].strip()
+                email_key = to_addr.lower()
                 try:
-                    generated[idx] = future.result()
+                    generated[email_key] = future.result()
                     stats["generation_success"] += 1
-                    log.info(f"[{idx}/{len(companies)}] Generated email for {co_name}")
-                    save_checkpoint(start_idx - 1, generated, sent_log)
+                    log.info(f"Generated email for {co_name}")
+                    save_checkpoint(0, generated, sent_log)
                 except Exception as e:
                     stats["generation_failed"] += 1
                     failures.append({"company": co_name, "email": to_addr, "stage": "generation", "error_message": str(e)})
-                    log.error(f"[{idx}/{len(companies)}] Generation failed for {co_name}: {e}")
-                    save_checkpoint(start_idx - 1, generated, sent_log)
+                    log.error(f"Generation failed for {co_name}: {e}")
+                    save_checkpoint(0, generated, sent_log)
     else:
         for idx, company in enumerate(companies, start=1):
-            if idx < start_idx or idx in generated:
-                continue
             to_addr = company["Email"].strip()
+            email_key = to_addr.lower()
+            if email_key in generated:
+                continue
             co_name = company["Company"].strip()
             log.info(f"[{idx}/{len(companies)}] Generating email for {co_name} -> {to_addr}")
             domain = to_addr.split("@")[-1]
             ctx = fetch_company_context(co_name, domain) if args.company_research else ""
             try:
-                generated[idx] = generate_and_gate_email(
+                generated[email_key] = generate_and_gate_email(
                     about_me,
                     company,
                     args.max_tokens,
@@ -1825,28 +1820,27 @@ def main():
                     variant_count=args.variant_count,
                 )
                 stats["generation_success"] += 1
-                save_checkpoint(start_idx - 1, generated, sent_log)
+                save_checkpoint(0, generated, sent_log)
             except Exception as e:
                 stats["generation_failed"] += 1
                 failures.append({"company": co_name, "email": to_addr, "stage": "generation", "error_message": str(e)})
                 log.error(f"  Generation failed for {co_name}: {e}")
-                save_checkpoint(start_idx - 1, generated, sent_log)
+                save_checkpoint(0, generated, sent_log)
 
     # ── Preview + send (sequential) ───────────────────────────────────────────
     success_count = 0
     fail_count = 0
 
     for idx, company in enumerate(companies, start=1):
-        if idx < start_idx:
-            continue
         to_addr = company["Email"].strip()
         co_name = company["Company"].strip()
+        email_key = to_addr.lower()
 
-        result = generated.get(idx)
+        result = generated.get(email_key)
         if not result:
             fail_count += 1
             # Still save checkpoint so we skip this failed generation company on resume
-            save_checkpoint(idx, generated, sent_log)
+            save_checkpoint(0, generated, sent_log)
             continue
 
         subject = result["subject"]
@@ -1880,7 +1874,7 @@ def main():
             failures.append({"company": co_name, "email": to_addr, "stage": "send", "error_message": "SMTP send failed"})
 
         # Save checkpoint after each processed index
-        save_checkpoint(idx, generated, sent_log)
+        save_checkpoint(0, generated, sent_log)
 
         if not args.dry_run and idx < len(companies):
             log.info(f"  Waiting {RATE_LIMIT_S}s before next send...")
