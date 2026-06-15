@@ -17,13 +17,14 @@ import json
 import logging
 import argparse
 import smtplib
+import ssl
 import sys
 import re
 import hashlib
 import random
 import threading
+import tempfile
 from contextlib import contextmanager
-import functools
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from datetime import datetime
@@ -31,6 +32,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from urllib.parse import quote as url_quote
 from typing import Optional
 
 from openai import OpenAI
@@ -41,6 +43,22 @@ import requests
 from bs4 import BeautifulSoup
 import dns.resolver
 
+# ── Rich UI ───────────────────────────────────────────────────────────────────
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import (
+    Progress, SpinnerColumn, BarColumn,
+    TextColumn, TimeElapsedColumn, TaskProgressColumn,
+)
+from rich.logging import RichHandler
+from rich.table import Table
+from rich.text import Text
+from rich.rule import Rule
+from rich.columns import Columns
+from rich import box
+
+console = Console(highlight=False)
+
 load_dotenv()
 
 # Ensure Windows console can print Unicode safely
@@ -50,53 +68,65 @@ try:
 except Exception:
     pass
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
-BASE_DIR     = Path(__file__).parent
-CSV_FILE     = BASE_DIR / "hr_emails_directory.csv"
-ABOUT_ME     = BASE_DIR / "about_me.md"
-RESUME_PDF   = BASE_DIR / "resume.pdf"
-SENT_LOG     = BASE_DIR / "sent_log.json"
-LOG_FILE     = BASE_DIR / "mailer.log"
-GEN_CACHE    = BASE_DIR / "generation_cache.json"
-CHECKPOINT_FILE = BASE_DIR / ".mailer_checkpoint.json"
-BOUNCED_LOG  = BASE_DIR / "bounced_log.json"
+# ── Paths ───────────────────────────────────────────────────────────────────
+BASE_DIR      = Path(__file__).parent
+CSV_FILE      = BASE_DIR / "hr_emails_directory.csv"
+ABOUT_ME      = BASE_DIR / "about_me.md"
+RESUME_PDF    = BASE_DIR / "resume.pdf"
+SENT_LOG      = BASE_DIR / "sent_log.json"            # Global deduplication
+BOUNCED_LOG   = BASE_DIR / "bounced_log.json"         # Global blocklist
 COMPANY_CACHE = BASE_DIR / "company_context_cache.json"
+GEN_CACHE     = BASE_DIR / "generation_cache.json"    # Persistent generation cache
+
+# Run-specific paths (initialized in main via setup_run_dir)
+RUN_DIR: Path = None
+LOG_FILE: Path = None
+CHECKPOINT_FILE: Path = None
+STATUS_LOG: Path = None
 
 
-# ── Config from .env ──────────────────────────────────────────────────────────
-LLM_API_KEY   = os.getenv("LLM_API_KEY")
-LLM_BASE_URL  = os.getenv("LLM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-LLM_MODEL     = os.getenv("LLM_MODEL", "meta/llama-3.3-70b-instruct")
-LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "deepseek-ai/deepseek-v4-flash")
-LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
-LLM_TOP_P = float(os.getenv("LLM_TOP_P", "0.95"))
+# ── Config from .env ──────────────────────────────────────────────────────────────────
+LLM_API_KEY          = os.getenv("LLM_API_KEY")
+LLM_BASE_URL         = os.getenv("LLM_BASE_URL", "https://integrate.api.nvidia.com/v1")
+LLM_MODEL            = os.getenv("LLM_MODEL", "meta/llama-3.3-70b-instruct")
+LLM_FALLBACK_MODEL   = os.getenv("LLM_FALLBACK_MODEL", "deepseek-ai/deepseek-v4-flash")
+LLM_TEMPERATURE      = float(os.getenv("LLM_TEMPERATURE", "0.2"))
+LLM_TOP_P            = float(os.getenv("LLM_TOP_P", "0.95"))
 LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "low").strip().lower()
+LLM_TIMEOUT_S        = float(os.getenv("LLM_TIMEOUT_S", "45"))
+LLM_RETRIES          = int(os.getenv("LLM_RETRIES", "2"))
+LLM_BACKOFF_S        = float(os.getenv("LLM_BACKOFF_S", "1.5"))
+LLM_MAX_BACKOFF_S    = float(os.getenv("LLM_MAX_BACKOFF_S", "30"))
+LLM_QUARANTINE_S     = float(os.getenv("LLM_QUARANTINE_S", "600"))
 
-SENDER_EMAIL  = os.getenv("SENDER_EMAIL")
-SENDER_PASS   = os.getenv("SENDER_APP_PASSWORD")   # Gmail app password
-SMTP_HOST     = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT     = int(os.getenv("SMTP_PORT", "587"))
+SMTP_HOST            = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT            = int(os.getenv("SMTP_PORT", "587"))
+SMTP_MAX_RETRIES     = int(os.getenv("SMTP_MAX_RETRIES", "2"))
+SMTP_RETRY_DELAY_S   = float(os.getenv("SMTP_RETRY_DELAY_S", "5"))
 
-SENDER_NAME   = os.getenv("SENDER_NAME", "Arnav")
-RATE_LIMIT_S  = float(os.getenv("RATE_LIMIT_SECONDS", "8"))  # seconds between sends
-GEN_MAX_TOKENS = int(os.getenv("GEN_MAX_TOKENS", "420"))
+SENDER_NAME          = os.getenv("SENDER_NAME", "Arnav")
+RATE_LIMIT_S         = float(os.getenv("RATE_LIMIT_SECONDS", "8"))
+GEN_MAX_TOKENS       = int(os.getenv("GEN_MAX_TOKENS", "420"))
+EMAIL_MAX_WORDS      = int(os.getenv("EMAIL_MAX_WORDS", "135"))
+EMAIL_MAX_SUBJECT_LEN = int(os.getenv("EMAIL_MAX_SUBJECT_LEN", "50"))
+MIN_CONTACT_SCORE    = int(os.getenv("MIN_CONTACT_SCORE", "2"))
+MIN_QUALITY_SCORE    = int(os.getenv("MIN_QUALITY_SCORE", "70"))
+VARIANT_COUNT        = int(os.getenv("VARIANT_COUNT", "1"))
+COMPANY_CONTEXT_MAX_CHARS = int(os.getenv("COMPANY_CONTEXT_MAX_CHARS", "800"))
 
-# SMTP connection pooling and rate limiting
-_smtp_lock = threading.Lock()
-_smtp_connection = None
-_smtp_last_used = 0
-_SMTP_CONNECTION_MAX_AGE = 300  # 5 minutes
-_SMTP_CONNECTION_MAX_USES = 50  # Renew connection after this many sends
-_smtp_uses_count = 0
+# SMTP connection pooling (from env)
+_SMTP_CONNECTION_MAX_AGE  = int(os.getenv("SMTP_CONN_MAX_AGE_S", "300"))
+_SMTP_CONNECTION_MAX_USES = int(os.getenv("SMTP_CONN_MAX_USES", "50"))
 
-# Adaptive rate limiting
-_base_delay = RATE_LIMIT_S
-_current_delay = RATE_LIMIT_S
-_max_delay = 60.0  # Maximum delay between sends
-_delay_multiplier = 1.5  # Increase delay after errors
-_delay_decay_factor = 0.9  # Gradually decrease delay after success
-_consecutive_successes = 0
-_consecutive_errors = 0
+# Adaptive rate limiting (from env)
+_base_delay               = RATE_LIMIT_S
+_current_delay            = RATE_LIMIT_S
+_max_delay                = float(os.getenv("RATE_LIMIT_MAX_DELAY_S", "60"))
+_delay_multiplier         = float(os.getenv("RATE_LIMIT_DELAY_MULTIPLIER", "1.5"))
+_delay_decay_factor       = float(os.getenv("RATE_LIMIT_DECAY_FACTOR", "0.9"))
+_rate_success_threshold   = int(os.getenv("RATE_LIMIT_SUCCESS_THRESHOLD", "5"))
+_consecutive_successes    = 0
+_consecutive_errors       = 0
 
 from dataclasses import dataclass, field
 from openai import OpenAI
@@ -115,20 +145,18 @@ _provider_pool: list[LLMProvider] = []
 _provider_pool_lock = threading.Lock()
 
 def get_active_provider() -> LLMProvider:
-    with _provider_pool_lock:
-        while True:
+    while True:
+        with _provider_pool_lock:
             now = time.time()
-            # Try to find a healthy provider
             for p in _provider_pool:
                 if now >= p.exhausted_until:
                     return p
-            
-            # All providers are exhausted! Wait for the soonest one to recover.
+            # All exhausted — find soonest recovery time outside the lock
             earliest_wake = min(p.exhausted_until for p in _provider_pool)
-            sleep_time = earliest_wake - now
-            if sleep_time > 0:
-                log.warning(f"All LLM providers are rate-limited. Sleeping for {sleep_time:.1f}s...")
-                time.sleep(sleep_time)
+        sleep_time = earliest_wake - time.time()
+        if sleep_time > 0:
+            log.warning(f"All LLM providers are rate-limited. Sleeping for {sleep_time:.1f}s...")
+            time.sleep(sleep_time)
 def _env_bool(name: str, default: bool | None = None) -> bool | None:
     raw = os.getenv(name)
     if raw is None:
@@ -141,50 +169,68 @@ def _env_bool(name: str, default: bool | None = None) -> bool | None:
     return default
 
 
+@dataclass
+class SenderAccount:
+    name: str
+    email: str
+    password: str
+    connection: smtplib.SMTP | None = None
+    last_used: float = 0
+    uses_count: int = 0
+    lock: threading.Lock = field(default_factory=threading.Lock)
+
+_senders_pool: list[SenderAccount] = []
+_sender_idx = 0
+_sender_pool_lock = threading.Lock()
+
+def get_next_sender() -> SenderAccount:
+    global _sender_idx
+    with _sender_pool_lock:
+        if not _senders_pool:
+            raise RuntimeError("No sender accounts configured")
+        sender = _senders_pool[_sender_idx]
+        _sender_idx = (_sender_idx + 1) % len(_senders_pool)
+        return sender
+
 @contextmanager
-def get_smtp_connection():
-    """Context manager for SMTP connection with pooling."""
-    global _smtp_connection, _smtp_last_used, _smtp_uses_count
-
-    with _smtp_lock:
-        # Check if we need to renew the connection
+def get_smtp_connection(sender: SenderAccount):
+    """Context manager for SMTP connection with pooling per sender."""
+    with sender.lock:
         now = time.time()
-        if (_smtp_connection is None or
-            (now - _smtp_last_used) > _SMTP_CONNECTION_MAX_AGE or
-            _smtp_uses_count >= _SMTP_CONNECTION_MAX_USES):
+        if (sender.connection is None or
+            (now - sender.last_used) > _SMTP_CONNECTION_MAX_AGE or
+            sender.uses_count >= _SMTP_CONNECTION_MAX_USES):
 
-            # Close existing connection if any
-            if _smtp_connection is not None:
+            if sender.connection is not None:
                 try:
-                    _smtp_connection.quit()
+                    sender.connection.quit()
                 except Exception:
-                    pass  # Ignore errors on close
-                _smtp_connection = None
+                    pass
+                sender.connection = None
 
-            # Create new connection
             try:
-                _smtp_connection = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
-                _smtp_connection.ehlo()
-                _smtp_connection.starttls()
-                _smtp_connection.login(SENDER_EMAIL, SENDER_PASS)
-                _smtp_last_used = now
-                _smtp_uses_count = 0
-                log.debug("SMTP connection established/renewed")
+                _ssl_ctx = ssl.create_default_context()
+                sender.connection = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+                sender.connection.ehlo()
+                sender.connection.starttls(context=_ssl_ctx)
+                sender.connection.login(sender.email, sender.password)
+                sender.last_used = now
+                sender.uses_count = 0
+                log.debug(f"SMTP connection established/renewed for {sender.email}")
             except Exception as e:
-                log.error(f"Failed to establish SMTP connection: {e}")
+                log.error(f"Failed to establish SMTP connection for {sender.email}: {e}")
                 raise
 
-        _smtp_uses_count += 1
+        sender.uses_count += 1
         try:
-            yield _smtp_connection
+            yield sender.connection
         except Exception as e:
-            # Mark connection as potentially bad on error
-            log.warning(f"SMTP connection error: {e}")
+            log.warning(f"SMTP connection error for {sender.email}: {e}")
             try:
-                _smtp_connection.quit()
+                sender.connection.quit()
             except Exception:
                 pass
-            _smtp_connection = None
+            sender.connection = None
             raise
 
 
@@ -196,7 +242,7 @@ def update_rate_limit(success: bool, smtp_error: Optional[Exception] = None):
         _consecutive_successes += 1
         _consecutive_errors = 0
         # Gradually decrease delay after successes, but not below base delay
-        if _consecutive_successes > 5:  # Only after several successes
+        if _consecutive_successes > _rate_success_threshold:
             _current_delay = max(_base_delay, _current_delay * _delay_decay_factor)
             log.debug(f"Rate delay decreased to {_current_delay:.2f}s after {_consecutive_successes} successes")
     else:
@@ -226,8 +272,9 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
     if not RESUME_PDF.exists():
         raise FileNotFoundError(f"resume.pdf not found at {RESUME_PDF}")
 
+    sender = get_next_sender()
     msg = MIMEMultipart()
-    msg["From"]    = f"{SENDER_NAME} <{SENDER_EMAIL}>"
+    msg["From"]    = f"{SENDER_NAME} <{sender.email}>"
     msg["To"]      = to_addr
     msg["Subject"] = subject
 
@@ -244,9 +291,12 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
         part = MIMEBase("application", "octet-stream")
         part.set_payload(f.read())
     encoders.encode_base64(part)
+    
+    company_name_clean = re.sub(r'[^a-zA-Z0-9]', '_', company_name) if company_name else ""
+    filename = f"{SENDER_NAME}_Resume_{company_name_clean}.pdf" if company_name_clean else f"{SENDER_NAME}_Resume.pdf"
     part.add_header(
         "Content-Disposition",
-        f'attachment; filename="{SENDER_NAME}_Resume.pdf"',
+        f'attachment; filename="{filename}"',
     )
     msg.attach(part)
 
@@ -256,11 +306,11 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
     # Apply intelligent rate limiting
     time.sleep(_current_delay)
 
-    max_send_attempts = 2
+    max_send_attempts = SMTP_MAX_RETRIES
     for attempt in range(1, max_send_attempts + 1):
         try:
-            with get_smtp_connection() as server:
-                server.sendmail(SENDER_EMAIL, to_addr, msg.as_string())
+            with get_smtp_connection(sender) as server:
+                server.sendmail(sender.email, to_addr, msg.as_string())
 
             # Success - update rate limiting
             update_rate_limit(True)
@@ -279,44 +329,57 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
 
             if is_fatal:
                 update_rate_limit(False, e)
-                log.error(f"Fatal SMTP error sending to {to_addr}: {e}")
+                log.error(f"Fatal SMTP error sending to {to_addr} from {sender.email}: {e}")
                 return False
 
             if attempt < max_send_attempts:
-                log.warning(f"Temporary SMTP error sending to {to_addr} (attempt {attempt}/{max_send_attempts}): {e}. Retrying in 5 seconds...")
-                time.sleep(5)
-                # Invalidate SMTP connection to force reconnection
-                global _smtp_connection
-                with _smtp_lock:
-                    if _smtp_connection is not None:
+                log.warning(f"Temporary SMTP error sending to {to_addr} from {sender.email} (attempt {attempt}/{max_send_attempts}): {e}. Retrying in {SMTP_RETRY_DELAY_S}s...")
+                time.sleep(SMTP_RETRY_DELAY_S)
+                with sender.lock:
+                    if sender.connection is not None:
                         try:
-                            _smtp_connection.quit()
+                            sender.connection.quit()
                         except Exception:
                             pass
-                        _smtp_connection = None
+                        sender.connection = None
                 continue
             else:
                 update_rate_limit(False, e)
-                log.error(f"SMTP error sending to {to_addr} after {max_send_attempts} attempts: {e}")
+                log.error(f"SMTP error sending to {to_addr} from {sender.email} after {max_send_attempts} attempts: {e}")
                 return False
 
 
 
 LLM_THINKING = _env_bool("LLM_THINKING", False)
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s  %(levelname)-8s  %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE),
-        logging.StreamHandler(),
-    ],
-)
+# ── Logging & Status ──────────────────────────────────────────────────────────
 log = logging.getLogger(__name__)
 
+def log_status(status: str, message: str):
+    if STATUS_LOG:
+        with open(STATUS_LOG, "a", encoding="utf-8") as f:
+            f.write(f"[{status}] {message}\n")
 
-# ── Sent log helpers ──────────────────────────────────────────────────────────
+
+def _atomic_write(path: Path, content: str) -> None:
+    """Atomically write content to a file to prevent corruption on crash."""
+    dir_ = path.parent
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", dir=dir_, delete=False,
+                                         suffix=".tmp", encoding="utf-8") as tf:
+            tf.write(content)
+            tmp_path = Path(tf.name)
+        os.replace(tmp_path, path)
+    except Exception as e:
+        # Best-effort cleanup
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+        raise
+
+
+# ── Sent log helpers ───────────────────────────────────────────────────
 def load_sent_log() -> dict:
     if SENT_LOG.exists():
         try:
@@ -329,7 +392,7 @@ def load_sent_log() -> dict:
 
 
 def save_sent_log(sent: dict):
-    SENT_LOG.write_text(json.dumps(sent, indent=2))
+    _atomic_write(SENT_LOG, json.dumps(sent, indent=2))
 
 
 def mark_sent(sent: dict, email: str, company: str):
@@ -353,7 +416,7 @@ def load_generation_cache() -> dict:
 
 
 def save_generation_cache(cache: dict):
-    GEN_CACHE.write_text(json.dumps(cache, indent=2))
+    _atomic_write(GEN_CACHE, json.dumps(cache, indent=2))
 
 
 def get_cached_email(cache: dict, company: dict, about_me: str) -> Optional[dict]:
@@ -519,8 +582,81 @@ def load_bounces() -> set:
             pass
     return set()
 
+def _scrape_page_context(url: str, timeout: int = 6) -> str:
+    """Scrape a single page and return the best available textual description."""
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        resp = requests.get(url, timeout=timeout, headers=headers, allow_redirects=True)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        snippets = []
+
+        # 1. OG description (usually the best marketing copy)
+        og_desc = soup.find("meta", property="og:description")
+        if og_desc and og_desc.get("content"):
+            snippets.append(og_desc["content"].strip())
+
+        # 2. Standard meta description fallback
+        meta_desc = soup.find("meta", attrs={"name": "description"})
+        if meta_desc and meta_desc.get("content"):
+            val = meta_desc["content"].strip()
+            if val not in snippets:
+                snippets.append(val)
+
+        # 3. JSON-LD schema.org description
+        for script in soup.find_all("script", type="application/ld+json"):
+            try:
+                data = json.loads(script.string or "")
+                if isinstance(data, dict) and data.get("description"):
+                    desc = data["description"].strip()
+                    if desc not in snippets:
+                        snippets.append(desc)
+                        break
+            except Exception:
+                pass
+
+        # 4. Page title
+        title = soup.title.string.strip() if soup.title and soup.title.string else ""
+
+        # 5. For /careers pages, try to grab "we're looking for" / tech-stack paragraphs
+        if "/careers" in url or "/jobs" in url:
+            for tag in soup.find_all(["p", "li", "h2", "h3"]):
+                text = tag.get_text(separator=" ", strip=True)
+                if any(kw in text.lower() for kw in ["looking for", "we build", "we use", "tech stack", "ideal candidate", "you will"]):
+                    if len(text) > 30:
+                        snippets.append(text[:300])
+                        break
+
+        result = ""
+        if title:
+            result += f"Website Title: {title}\n"
+        if snippets:
+            result += "\n".join(snippets[:3])  # Top 3 snippets max
+
+        return result.strip()
+    except Exception:
+        return ""
+
+
+def _ddg_company_snippet(company_name: str, domain: str) -> str:
+    """Fall back to a DuckDuckGo search snippet to get company description."""
+    try:
+        query = f"{company_name} {domain} company about"
+        url = f"https://html.duckduckgo.com/html/?q={url_quote(query)}"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        resp = requests.get(url, timeout=8, headers=headers)
+        soup = BeautifulSoup(resp.text, "html.parser")
+        results = soup.find_all("a", class_="result__snippet")
+        if results:
+            return results[0].get_text(separator=" ", strip=True)[:400]
+    except Exception:
+        pass
+    return ""
+
+
 def fetch_company_context(company_name: str, domain: str) -> str:
-    """Fetch website title and meta description for context injection."""
+    """Fetch rich company context: homepage + /about + /careers, with OG tags and DDG fallback."""
     if COMPANY_CACHE.exists():
         try:
             cache = json.loads(COMPANY_CACHE.read_text())
@@ -530,27 +666,66 @@ def fetch_company_context(company_name: str, domain: str) -> str:
             cache = {}
     else:
         cache = {}
-        
-    url = f"https://{domain}"
-    try:
-        log.info(f"  Fetching web context for {company_name} from {url}...")
-        resp = requests.get(url, timeout=5, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        
-        title = soup.title.string if soup.title else ""
-        meta_desc = soup.find('meta', attrs={'name': 'description'})
-        desc = meta_desc['content'] if meta_desc else ""
-        
-        context = f"Website Title: {title.strip()}\nDescription: {desc.strip()}"
-        cache[domain] = context
-        COMPANY_CACHE.write_text(json.dumps(cache, indent=2))
-        return context
-    except Exception as e:
-        log.debug(f"Failed to fetch context for {company_name}: {e}")
+
+    log.info(f"  Fetching web context for {company_name} from {domain}...")
+
+    collected: list[str] = []
+
+    # Pages to try in order
+    candidate_urls = [
+        f"https://{domain}",
+        f"https://{domain}/about",
+        f"https://{domain}/about-us",
+        f"https://{domain}/careers",
+    ]
+
+    homepage_ok = False
+    for url in candidate_urls:
+        snippet = _scrape_page_context(url)
+        if snippet:
+            if url == f"https://{domain}":
+                homepage_ok = True
+            for line in snippet.split("\n"):
+                if line.strip() and line.strip() not in collected:
+                    collected.append(line.strip())
+        if len(collected) >= 6:  # Enough context
+            break
+
+    # DuckDuckGo fallback if homepage failed or gave nothing useful
+    if not homepage_ok or len(collected) < 2:
+        ddg = _ddg_company_snippet(company_name, domain)
+        if ddg and ddg not in collected:
+            collected.append(f"[Search snippet] {ddg}")
+
+    if not collected:
         cache[domain] = ""
         COMPANY_CACHE.write_text(json.dumps(cache, indent=2))
         return ""
+
+    # Assemble context, capped to env-configured max chars
+    context = "\n".join(collected)
+    if len(context) > COMPANY_CONTEXT_MAX_CHARS:
+        context = context[:COMPANY_CONTEXT_MAX_CHARS - 3] + "..."
+
+    # Scrub prompt-injection patterns before injecting into LLM prompt
+    injection_patterns = [
+        r'ignore (all |previous |prior )?instructions',
+        r'disregard (all |previous |prior )?instructions',
+        r'you are now',
+        r'new persona',
+        r'system prompt',
+    ]
+    for pattern in injection_patterns:
+        context = re.sub(pattern, '[redacted]', context, flags=re.IGNORECASE)
+
+    cache[domain] = context
+    try:
+        COMPANY_CACHE.write_text(json.dumps(cache, indent=2))
+    except Exception as e:
+        log.debug(f"Failed to save company context cache: {e}")
+
+    return context
+
 
 
 
@@ -622,20 +797,42 @@ def calculate_contact_score(company: dict, sent_log: dict = None) -> int:
 
 
 # ── NIM email generator ───────────────────────────────────────────────────────
-SYSTEM_PROMPT = """You are a sharp career assistant helping a CS undergraduate write
-cold job-application emails. Your emails are:
-- Concise (max 180 words in the body)
-- Genuine and specific to the target company, no generic filler
-- Written in first person, professional but not stiff
-- Structured: 1-line opener about the company, 2-3 lines on relevant projects/skills, 1-line ask
-- No subject line inside body text
-- No generic opener like 'Dear Hiring Team'
-- End with a single clean sign-off line
+SYSTEM_PROMPT = """You are writing a cold job-application email on behalf of Arnav Sagar, a 2nd-year B.Tech Software Engineering student at Delhi Technological University (DTU), CGPA 8.75.
 
-You must return ONLY valid JSON with exactly these keys:
+## Who Arnav Is
+Arnav is not a typical student applicant. He completed two research internships before the end of his first year — both producing real, deployed systems:
+- At AIMS-DTU: built a 3-stage LLM moderation pipeline (regex → semantic embeddings → fine-tuned DistilBERT + XGBoost) with sub-10ms filtering, served via FastAPI in production.
+- At 5G Lab, DoT DTU: built a sub-25ms P95 on-device vision inference pipeline using YOLOv8, CUDA, and a self-supervised trajectory autoencoder. Presented at PEC Chandigarh.
+His strongest projects (YTRAG, LLM Safety Shield, JAILS, ZeroFall+, CAF-OTSRNet) involve real engineering — not tutorials. He can cite concrete metrics: 0.9996 accuracy, +15.74% PSNR vs SOTA, 4× model compression.
+
+## Email Structure (MANDATORY — 3 paragraphs)
+1. **HOOK** (1 sentence): Say something *specific* about the target company's product, technology, or mission. This must come from the company context provided. Be direct — not flattering.
+2. **VALUE PROP** (2 sentences max): Cite exactly 2 specific technical facts from Arnav's most relevant projects for this company's domain. Include at least one concrete metric. Do NOT summarise — be precise.
+3. **ASK** (1 sentence): A clear, confident request — offer to share more or schedule a short call.
+
+Sign off with:
+Arnav Sagar | DTU 2nd Year | +91-6284962948 | arnavsagar1510@gmail.com
+
+## Hard Rules
+- **Max 135 words** in the body (not counting the sign-off line)
+- **No salutation** ("Hi", "Dear Hiring Team", "Hello" — skip all of them, go straight to the hook)
+- **Subject line**: Use the format already given in the user prompt — do NOT change it
+- **BANNED openers** (never start the email body with any of these):
+  - "I've been impressed by..."
+  - "I came across your..."
+  - "I hope this email/message finds you..."
+  - "I am writing to express my interest..."
+  - "I am a student at..."
+  - "As a [X]-year student..."
+- **BANNED filler phrases**: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit"
+- Do NOT open with Arnav's name or school — lead with the company hook.
+
+## Output Format
+Return ONLY valid JSON with exactly these keys:
 {"subject":"...","body":"..."}
-No markdown. No code fences. No extra keys.
+No markdown. No code fences. No extra keys. No explanation.
 """
+
 
 
 def _extract_content_text(response) -> str:
@@ -954,6 +1151,115 @@ linkedin.com/in/arnvsr | github.com/zibranxo
 """
 
 
+# ── Domain-to-project routing ─────────────────────────────────────────────────
+# Maps a company's Tag field to the most relevant Arnav projects/internships.
+# Edit this as new projects are completed or priorities shift.
+DOMAIN_PROJECT_MAP: dict[str, list[str]] = {
+    "AI/ML":        ["AIMS-DTU internship", "LLM Safety Shield", "YTRAG", "JAILS"],
+    "NLP":          ["YTRAG", "AIMS-DTU internship", "JAILS", "LLM Safety Shield"],
+    "Conversational AI": ["YTRAG", "Vera Bot", "AIMS-DTU internship"],
+    "Fintech":      ["Vera Bot", "YTRAG", "AIMS-DTU internship"],
+    "Edtech":       ["YTRAG", "Retrieval Augmentation System", "AIMS-DTU internship"],
+    "Security":     ["ZeroFall+", "JAILS", "LLM Safety Shield", "AIMS-DTU internship"],
+    "Data":         ["AI vs Human classifier", "Retrieval Augmentation System", "YTRAG"],
+    "SaaS":         ["Vera Bot", "YTRAG", "LLM Safety Shield"],
+    "5G/Telecom":   ["5G Lab internship", "ZeroFall+", "CAF-OTSRNet"],
+    "Healthcare":   ["AIMS-DTU internship", "LLM Safety Shield", "YTRAG"],
+    "E-commerce":   ["Vera Bot", "YTRAG", "JAILS"],
+    "default":      ["YTRAG", "LLM Safety Shield", "AIMS-DTU internship"],
+}
+
+# Maps project/internship names to a short, metric-rich description the LLM can cite.
+PROJECT_BRIEFS: dict[str, str] = {
+    "AIMS-DTU internship":
+        "Built a 3-stage LLM moderation pipeline (regex → DistilBERT + XGBoost + LOF) "
+        "achieving sub-10ms filtering across 5 harm categories, served via FastAPI in production.",
+    "5G Lab internship":
+        "Engineered a sub-25ms P95 on-device YOLOv8 inference pipeline via 4× model compression "
+        "and a self-supervised trajectory autoencoder; presented original research at PEC Chandigarh.",
+    "LLM Safety Shield":
+        "Session-aware jailbreak classifier with MiniLM similarity, SHAP explainability, "
+        "adversarial normalisation (homoglyphs, base64), Redis caching for sub-ms repeat queries, and ONNX inference.",
+    "YTRAG":
+        "Full end-to-end RAG pipeline over YouTube transcripts: semantic chunking → "
+        "text-embedding-3-small → IndexedDB → cosine retrieval (TOP_K=3) → LLM generation. Dual provider support.",
+    "JAILS":
+        "Hybrid jailbreak/prompt-injection detector combining semantic similarity, TF-IDF, LOF for zero-day attacks, "
+        "and fully interpretable output with confidence score + feature-level reasoning.",
+    "ZeroFall+":
+        "Unified WAF + EDR pipeline with 6 autonomous agents — RoBERTa for anomaly detection, "
+        "blockchain behavioural hashing for O(1) immutable threat memory, LoRA fine-tuning.",
+    "Vera Bot":
+        "Prompt-dispatch composer for merchant messaging with 4-context routing, post-LLM validator, "
+        "auto-reply detector (regex + repeat counter), and temperature=0 for deterministic outputs.",
+    "AI vs Human classifier":
+        "14-model benchmark on ~200K samples; RoBERTa fine-tune hit 0.9996 accuracy. "
+        "GPU pipeline: 35 min → 6 min (5.8× speedup).",
+    "Retrieval Augmentation System":
+        "Multi-stage RAG over PDFs: FAISS + BM25 hybrid retrieval, RRF fusion, cross-encoder reranking, "
+        "HyDE query expansion, and CRAG-based hallucination suppression.",
+    "CAF-OTSRNet":
+        "Triple-encoder cross-attention fusion for thermal super-resolution. "
+        "PSNR +15.74%, SSIM +8.22% vs SOTA on ISRO dataset. National Finalist, Smart India Hackathon 2025.",
+}
+
+
+def build_candidate_context(about_me: str, company_tag: str) -> str:
+    """Build a compact, domain-ranked candidate context block for the LLM user prompt.
+
+    Instead of sending the full 7,600-byte about_me.md, this extracts:
+    - The top 2–3 most relevant projects for the given company domain tag
+    - Their metric-rich brief descriptions
+    - Core identity facts (school, CGPA, year, internship count)
+
+    Returns a ~250-token structured string ready to inject into the user prompt.
+    """
+    # Normalize tag: remove spaces around slashes, lowercase for matching
+    tag_normalised = company_tag.strip() if company_tag else "default"
+    tag_key = re.sub(r'\s*/\s*', '/', tag_normalised)  # "AI / ML" → "AI/ML", "AI / NLP" → "AI/NLP"
+
+    # Exact match first
+    project_keys = DOMAIN_PROJECT_MAP.get(tag_key) or DOMAIN_PROJECT_MAP.get(tag_normalised)
+    if not project_keys:
+        # Fuzzy match: check each map key against normalized tag tokens
+        tag_tokens = set(re.split(r'[/\s]+', tag_key.lower()))  # {"ai", "ml"}
+        best_key = None
+        best_overlap = 0
+        for key in DOMAIN_PROJECT_MAP:
+            if key == "default":
+                continue
+            key_tokens = set(re.split(r'[/\s]+', key.lower()))
+            overlap = len(tag_tokens & key_tokens)
+            if overlap > best_overlap:
+                best_overlap = overlap
+                best_key = key
+        if best_key and best_overlap > 0:
+            project_keys = DOMAIN_PROJECT_MAP[best_key]
+    if not project_keys:
+        project_keys = DOMAIN_PROJECT_MAP["default"]
+
+    # Build project bullets (top 3 max)
+    project_bullets = []
+    for name in project_keys[:3]:
+        brief = PROJECT_BRIEFS.get(name)
+        if brief:
+            project_bullets.append(f"  • {name}: {brief}")
+
+    projects_block = "\n".join(project_bullets)
+
+    return f"""## Arnav Sagar — Candidate Brief
+- DTU 2nd Year, B.Tech Software Engineering | CGPA: 8.75/10
+- 2 research internships shipped before end of Year 1 (AIMS-DTU LLM Safety + 5G Lab DoT)
+- National Finalist, Smart India Hackathon 2025 (ISRO problem statement)
+
+## Most Relevant Work for This Company's Domain ({tag_normalised})
+{projects_block}
+
+## Contact
+arnavsagar1510@gmail.com | +91-6284962948 | github.com/zibranxo | linkedin.com/in/arnvsr"""
+
+
+
 def generate_email(
     provider: LLMProvider,
     about_me: str,
@@ -967,23 +1273,64 @@ def generate_email(
     reasoning_effort: str | None = LLM_REASONING_EFFORT,
     company_context: str = "",
 ) -> dict:
-    user_prompt = f"""
-Candidate profile (Markdown):
-{about_me}
+    co_name    = company["Company"]
+    co_tag     = company.get("Tag", "")
+    co_region  = company.get("Region", "")
+    co_note    = company.get("Note", "")
+    co_email   = company["Email"]
 
-Target company:
-  Name:    {company['Company']}
-  Domain:  {company['Tag']}
-  Region:  {company['Region']}
-  Note:    {company['Note']}
-  Email:   {company['Email']}
+    # Build curated candidate context (domain-aware, ~250 tokens vs 7,600 bytes raw)
+    candidate_ctx = build_candidate_context(about_me, co_tag)
+
+    # Determine contact role hint for personalisation
+    contact_hint = f"Contact: {co_note}" if co_note else "Contact: Hiring / Recruiting team"
+
+    # Build subject line (fixed format per instructions in about_me.md)
+    subject_line = "Internship Application - Arnav Sagar (DTU) - AI/ML"
+
+    user_prompt = f"""## Your Task
+Write a cold job-application email on behalf of Arnav Sagar for the company below.
+Use the candidate brief and company context to make it specific and metric-grounded.
+
+---
+
+{candidate_ctx}
+
+---
+
+## Target Company
+- Name: {co_name}
+- Industry / Domain: {co_tag}
+- Region: {co_region}
+- {contact_hint}
 """
-    if company_context:
-        user_prompt += f"\nCompany Context (Website):\n{company_context}\n"
 
-    user_prompt += """
-Write a personalized cold application email for this candidate applying to this company.
-Return strictly valid JSON with keys "subject" and "body" only.
+    if company_context:
+        user_prompt += f"""
+## Company Context (scraped from website)
+{company_context}
+"""
+    else:
+        user_prompt += f"""
+## Company Context
+No website context available — use your knowledge of {co_name} if known, otherwise focus on the industry domain.
+"""
+
+    user_prompt += f"""
+---
+
+## Output Requirements
+- Subject must be exactly: "{subject_line}"
+- Body structure (3 paragraphs, no salutation, each paragraph on its own line separated by a blank line):
+  1. HOOK (1 sentence): A direct, specific observation about {co_name}'s product/tech/mission using the company context. Must reference something concrete from the context above.
+  2. VALUE PROP (2 sentences): Pick 2 projects from the candidate brief. Write in first person — e.g. "At AIMS-DTU, I built ... achieving sub-10ms latency. I also built YTRAG, a full RAG pipeline achieving TOP_K=3 cosine retrieval." Include at least 1 concrete metric per project.
+  3. ASK (1 sentence in first person): e.g. "I'd love to share more details or have a short call if you're open to it."
+- **MANDATORY last line of body** (copy exactly): "Arnav Sagar | DTU 2nd Year | +91-6284962948 | arnavsagar1510@gmail.com"
+- Max 135 words in body (before the sign-off line). Count carefully.
+- BANNED openers: any sentence starting with "I've", "I came", "I hope", "I am writing", "I am a", "As a", "Dear", "Hi", "Hello"
+- BANNED phrases anywhere in body: "demonstrate", "showcase", "passionate", "excited", "believe I can", "feel I would"
+
+Return ONLY: {{"subject": "...", "body": "..."}}
 """
     request = {
         "model": model or provider.model,
@@ -1103,8 +1450,8 @@ def generate_email_with_retry(
             error_msg = str(e).lower()
 
             if "429" in error_msg or "too many requests" in error_msg:
-                log.warning(f"  [{company['Company']}] 429 Rate Limit hit on {provider.name}. Quarantining provider for 600s and switching...")
-                provider.exhausted_until = time.time() + 600.0
+                log.warning(f"  [{company['Company']}] 429 Rate Limit hit on {provider.name}. Quarantining provider for {LLM_QUARANTINE_S:.0f}s and switching...")
+                provider.exhausted_until = time.time() + LLM_QUARANTINE_S
                 continue
 
             if _is_fatal_llm_error(e):
@@ -1164,7 +1511,7 @@ def generate_email_with_retry(
             # Apply jitter: random factor between 0.5 and 1.5 to prevent thundering herd
             jittered_delay = base_delay * (0.5 + random.random())
             # Cap at maximum delay to prevent excessively long waits
-            max_delay = 30.0  # seconds
+            max_delay = LLM_MAX_BACKOFF_S
             sleep_s = min(jittered_delay, max_delay)
             log.warning(
                 f"  Generation retry {attempt}/{max_retries} for {company['Company']}: {e} | sleeping {sleep_s:.1f}s"
@@ -1175,7 +1522,7 @@ def generate_email_with_retry(
         raise last_error
     raise ValueError("generate_email_with_retry failed but last_error was None")
 
-LOW_QUALITY_QUEUE = BASE_DIR / "low_quality_queue.json"
+LOW_QUALITY_QUEUE: Path = None  # Set to RUN_DIR / "low_quality_queue.json" in main
 
 
 def calculate_quality_score(subject: str, body: str, company: dict) -> int:
@@ -1185,9 +1532,9 @@ def calculate_quality_score(subject: str, body: str, company: dict) -> int:
     
     # 1. Conciseness (15 points)
     words = body.split()
-    if len(words) <= 180:
+    if len(words) <= EMAIL_MAX_WORDS:
         score += 10
-    if len(subject) <= 50:
+    if len(subject) <= EMAIL_MAX_SUBJECT_LEN:
         score += 5
         
     # 2. Relevance (30 points)
@@ -1346,32 +1693,82 @@ def generate_and_gate_email(
     return _template_fallback_email(company)
 
 
-# ── Pretty print preview ──────────────────────────────────────────────────────
+# ── Rich terminal UI helpers ───────────────────────────────────────────────────────────
+
+def print_banner(run_dir: Path, dry_run: bool, company_count: int, model: str,
+                 sender_count: int, resume: bool):
+    """Print a minimal startup header."""
+    mode_text = "[bold dim]DRY RUN[/]" if dry_run else "[bold dim]LIVE SEND[/]"
+    resume_text = " [dim]·[/] [bold dim]RESUME[/]" if resume else ""
+
+    console.print()
+    console.print(f"  [bold white]Auto Mailer[/] [dim]v2[/]  [dim]·[/]  {mode_text}{resume_text}")
+    console.print(f"  [dim]dir:[/] {run_dir}  [dim]·[/]  [dim]model:[/] {model}  [dim]·[/]  [dim]targets:[/] {company_count}")
+    console.print()
 
 
 def print_preview(company: dict, subject: str, body: str, idx: int, total: int):
-    sep = "-" * 64
-    print(f"\n{sep}")
-    print(f"  [{idx}/{total}]  {company['Company']}  ->  {company['Email']}")
-    tag_info = company.get('Tag', 'N/A')
-    region_info = company.get('Region', 'N/A')
-    score_info = company.get('contact_score', 'N/A')
-    if isinstance(score_info, (int, float)):
-        score_info = f"{score_info}/10"
-    print(f"  Tag: {tag_info}  |  Region: {region_info}  |  Score: {score_info}")
-    print(f"{sep}")
-    print(f"  Subject : {subject}")
-    print(f"{sep}")
-    print(body)
-    print(sep)
+    """Minimal text-based email preview."""
+    co_name  = company["Company"]
+    co_email = company["Email"]
+    score    = company.get("contact_score", "N/A")
+    score_str = f"{score}/10" if isinstance(score, (int, float)) else str(score)
+    q_score  = company.get("quality_score", "N/A")
+
+    console.print(f"\n  [dim]┌─[/] [bold white]{idx}/{total}[/] [bold white]{co_name}[/] [dim]→ {co_email}[/]")
+    console.print(f"  [dim]│[/]  [dim]Score:[/] {score_str}  [dim]·[/]  [dim]Quality:[/] {q_score}")
+    console.print(f"  [dim]│[/]  [dim]Subject:[/] [white]{subject}[/]")
+    console.print(f"  [dim]│[/]")
+    
+    # Indent body
+    for line in body.split("\n"):
+        console.print(f"  [dim]│[/]  [dim]{line}[/]")
+        
+    console.print(f"  [dim]└─[/]")
+
+
+def print_send_status(co_name: str, to_addr: str, sent_ok: bool, dry_run: bool):
+    """Print a compact per-email send result line."""
+    if dry_run:
+        status = "[dim yellow]skip[/]"
+    elif sent_ok:
+        status = "[dim green]sent[/]"
+    else:
+        status = "[dim red]fail[/]"
+
+    console.print(f"     {status} [dim]·[/] [white]{co_name}[/] [dim]→ {to_addr}[/]")
+
+
+def print_summary(success_count: int, fail_count: int, stats: dict, dry_run: bool,
+                  run_dir: Path, report_path: str = ""):
+    """Minimal final summary."""
+    console.print()
+    console.print(f"  [bold white]Run complete[/]")
+    
+    if dry_run:
+        console.print("  [dim]Dry run — no emails were actually sent.[/]")
+        
+    console.print(f"  [dim]Sent:[/]      [white]{stats.get('send_success', success_count)}[/]")
+    if fail_count > 0:
+        console.print(f"  [dim]Failed:[/]    [red]{stats.get('send_failed', fail_count)}[/]")
+    if stats.get('skipped_sent', 0) > 0:
+        console.print(f"  [dim]Skipped:[/]   [white]{stats.get('skipped_sent', 0)}[/]")
+        
+    console.print(f"  [dim]Generated:[/] [white]{stats.get('generation_success', 0)}[/]")
+    
+    console.print()
+    console.print(f"  [dim]dir:[/] {run_dir}")
+    if report_path:
+        console.print(f"  [dim]report:[/] {report_path}")
+    console.print()
 
 
 
 def generate_run_report(stats: dict, failures: list, emails_attempted: list, args):
     """Generate structured JSON and markdown reports of the mailing run."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_filename = BASE_DIR / f"run_report_{timestamp}.json"
-    summary_filename = BASE_DIR / f"run_report_{timestamp}.md"
+    report_filename = RUN_DIR / f"run_report_{timestamp}.json"
+    summary_filename = RUN_DIR / f"run_report_{timestamp}.md"
     
     report_data = {
         "run_id": timestamp,
@@ -1450,17 +1847,10 @@ def generate_run_report(stats: dict, failures: list, emails_attempted: list, arg
 
 def load_checkpoint() -> Optional[dict]:
     """Load checkpoint if it exists and is valid."""
-    if CHECKPOINT_FILE.exists():
+    if CHECKPOINT_FILE and CHECKPOINT_FILE.exists():
         try:
             data = json.loads(CHECKPOINT_FILE.read_text())
-            # Optional: validate freshness (< 2 hours)
-            ts_str = data.get("timestamp", "")
-            if ts_str:
-                ts = datetime.fromisoformat(ts_str)
-                if (datetime.now() - ts).total_seconds() < 7200:
-                    return data
-                else:
-                    log.warning("Checkpoint found but is older than 2 hours. Ignoring.")
+            return data
         except Exception as e:
             log.warning(f"Failed to load checkpoint: {e}")
     return None
@@ -1468,27 +1858,19 @@ def load_checkpoint() -> Optional[dict]:
 
 def save_checkpoint(last_idx: int, generated_cache: dict, sent_log_snapshot: dict):
     """Save run state checkpoint to file."""
+    if not CHECKPOINT_FILE:
+        return
     try:
-        data = {
+        checkpoint_data = {
             "last_processed_index": last_idx,
             "generated_cache_by_email": generated_cache,
             "sent_log_snapshot": sent_log_snapshot,
             "timestamp": datetime.now().isoformat()
         }
-        CHECKPOINT_FILE.write_text(json.dumps(data, indent=2))
+        _atomic_write(CHECKPOINT_FILE, json.dumps(checkpoint_data, indent=2))
         log.debug(f"Saved checkpoint")
     except Exception as e:
         log.error(f"Failed to save checkpoint: {e}")
-
-
-def delete_checkpoint():
-    """Remove checkpoint file upon successful run completion."""
-    if CHECKPOINT_FILE.exists():
-        try:
-            CHECKPOINT_FILE.unlink()
-            log.info("Checkpoint file cleaned up.")
-        except Exception as e:
-            log.error(f"Failed to clean up checkpoint file: {e}")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -1510,35 +1892,37 @@ def main():
                         help="Re-send even to already-emailed companies")
     parser.add_argument("--workers",        type=int, default=1,
                         help="Parallel LLM generation workers (default: 1)")
-    parser.add_argument("--llm-timeout",    type=float, default=45,
-                        help="Per-request timeout in seconds for LLM call")
-    parser.add_argument("--llm-retries",    type=int, default=2,
-                        help="Retries per LLM request on failure")
-    parser.add_argument("--llm-backoff",    type=float, default=1.5,
-                        help="Base backoff seconds for retries (exponential)")
+    parser.add_argument("--llm-timeout",    type=float, default=LLM_TIMEOUT_S,
+                        help=f"Per-request timeout in seconds for LLM call (default: {LLM_TIMEOUT_S} from env)")
+    parser.add_argument("--llm-retries",    type=int, default=LLM_RETRIES,
+                        help=f"Retries per LLM request on failure (default: {LLM_RETRIES} from env)")
+    parser.add_argument("--llm-backoff",    type=float, default=LLM_BACKOFF_S,
+                        help=f"Base backoff seconds for retries (default: {LLM_BACKOFF_S} from env)")
     parser.add_argument("--max-tokens",     type=int, default=GEN_MAX_TOKENS,
-                        help=f"Max tokens for generated email (default: {GEN_MAX_TOKENS})")
+                        help=f"Max tokens for generated email (default: {GEN_MAX_TOKENS} from env)")
     parser.add_argument("--temperature",    type=float, default=LLM_TEMPERATURE,
-                        help=f"LLM temperature (default: {LLM_TEMPERATURE})")
+                        help=f"LLM temperature (default: {LLM_TEMPERATURE} from env)")
     parser.add_argument("--top-p",          type=float, default=LLM_TOP_P,
-                        help=f"LLM top_p (default: {LLM_TOP_P})")
+                        help=f"LLM top_p (default: {LLM_TOP_P} from env)")
     parser.add_argument("--thinking", action=argparse.BooleanOptionalAction, default=LLM_THINKING,
                         help=f"Enable/disable model thinking mode (default from env: {LLM_THINKING})")
     parser.add_argument("--reasoning-effort", type=str, default=LLM_REASONING_EFFORT,
                         choices=["none", "low", "medium", "high"],
-                        help=f"Reasoning effort level (default: {LLM_REASONING_EFFORT})")
-    parser.add_argument("--min-contact-score", type=int, default=2,
-                        help="Minimum contact score to process (0-10, default: 2)")
-    parser.add_argument("--min-quality-score", type=int, default=70,
-                        help="Minimum email quality score to allow sending (0-100, default: 70)")
+                        help=f"Reasoning effort level (default: {LLM_REASONING_EFFORT} from env)")
+    parser.add_argument("--min-contact-score", type=int, default=MIN_CONTACT_SCORE,
+                        help=f"Minimum contact score to process (0-10, default: {MIN_CONTACT_SCORE} from env)")
+    parser.add_argument("--min-quality-score", type=int, default=MIN_QUALITY_SCORE,
+                        help=f"Minimum email quality score to allow sending (0-100, default: {MIN_QUALITY_SCORE} from env)")
     parser.add_argument("--slowmode", action="store_true",
                         help="Enforce a strict 30 requests/minute LLM rate limit")
-    parser.add_argument("--resume", action="store_true",
-                        help="Resume from the latest checkpoint file if available")
+    parser.add_argument("--resume", nargs="?", const="", default=None,
+                        help="Resume from a run folder. E.g., --resume runs/2026-06-15. Resumes latest if no folder specified.")
+    parser.add_argument("--business-hours", action="store_true",
+                        help="Only send emails between 9 AM and 5 PM on weekdays")
     parser.add_argument("--company-research", action="store_true",
                         help="Enable website scraping for company context")
-    parser.add_argument("--variant-count", type=int, default=1,
-                        help="Number of email variants to generate and score per company")
+    parser.add_argument("--variant-count", type=int, default=VARIANT_COUNT,
+                        help=f"Number of email variants to generate and score per company (default: {VARIANT_COUNT} from env)")
     parser.add_argument("--check-bounces", action="store_true",
                         help="Check IMAP for bounce messages to automatically skip them")
     parser.add_argument("--check-mx", action="store_true",
@@ -1563,15 +1947,89 @@ def main():
     failures = []
     emails_attempted = []
 
-    # ── Validate env ──────────────────────────────────────────────────────────
+    # ── Setup Run Environment ─────────────────────────────────────────────────
+    global RUN_DIR, LOG_FILE, CHECKPOINT_FILE, STATUS_LOG, LOW_QUALITY_QUEUE
+    runs_base = BASE_DIR / "runs"
+    runs_base.mkdir(exist_ok=True)
+
+    if args.resume is not None:
+        if isinstance(args.resume, str) and args.resume.strip():
+            run_dir = Path(args.resume.strip())
+            if not run_dir.exists():
+                if (runs_base / run_dir).exists():
+                    run_dir = runs_base / run_dir
+                else:
+                    raise FileNotFoundError(f"Resume directory not found: {args.resume}")
+        else:
+            dirs = [d for d in runs_base.iterdir() if d.is_dir()]
+            if not dirs:
+                raise FileNotFoundError("No previous runs found to resume from.")
+            run_dir = max(dirs, key=lambda d: d.name)
+    else:
+        today = datetime.now().strftime("%Y-%m-%d")
+        run_dir = runs_base / today
+        run_dir.mkdir(exist_ok=True)
+
+    RUN_DIR = run_dir
+    LOG_FILE = run_dir / "mailer.log"
+    CHECKPOINT_FILE = run_dir / "checkpoint.json"
+    STATUS_LOG = run_dir / "status.log"
+    LOW_QUALITY_QUEUE = run_dir / "low_quality_queue.json"
+
+    # ── Split logging: RichHandler for console, plain FileHandler for log file ───
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()
+    root_logger.setLevel(logging.INFO)
+
+    # File handler — plain timestamped text for archiving
+    _fh = logging.FileHandler(LOG_FILE, encoding="utf-8")
+    _fh.setFormatter(logging.Formatter("%(asctime)s  %(levelname)-8s  %(message)s"))
+    root_logger.addHandler(_fh)
+
+    # Console handler — Rich formatted, colorful
+    _rh = RichHandler(
+        console=console,
+        rich_tracebacks=True,
+        show_path=False,
+        markup=True,
+        log_time_format="[%H:%M:%S]",
+    )
+    _rh.setFormatter(logging.Formatter("%(message)s"))
+    root_logger.addHandler(_rh)
+
+    # Silence noisy third-party loggers on console (keep in file)
+    for _noisy in ("httpx", "openai", "urllib3", "requests"):
+        logging.getLogger(_noisy).setLevel(logging.WARNING)
+
+    # Rebind module logger
+    global log
+    log = logging.getLogger(__name__)
+
+    log.info(f"Using run directory: [bold]{RUN_DIR}[/]")
+
+    # ── Validate env & Load Senders ───────────────────────────────────────────
+    _senders_pool.clear()
+    p_email = os.getenv("SENDER_EMAIL")
+    p_pass = os.getenv("SENDER_APP_PASSWORD")
+    if p_email and p_pass:
+        _senders_pool.append(SenderAccount(name=SENDER_NAME, email=p_email, password=p_pass))
+    
+    for i in range(2, 11):
+        s_email = os.getenv(f"SENDER_{i}_EMAIL")
+        s_pass = os.getenv(f"SENDER_{i}_APP_PASSWORD")
+        if s_email and s_pass:
+            _senders_pool.append(SenderAccount(name=SENDER_NAME, email=s_email, password=s_pass))
+
     missing = []
     if not LLM_API_KEY:   missing.append("LLM_API_KEY")
-    if not args.dry_run:
-        if not SENDER_EMAIL: missing.append("SENDER_EMAIL")
-        if not SENDER_PASS:  missing.append("SENDER_APP_PASSWORD")
+    if not args.dry_run and not _senders_pool:
+        missing.append("SENDER_EMAIL and SENDER_APP_PASSWORD")
     if missing:
         log.error(f"Missing env vars: {', '.join(missing)}. Set them in .env")
         raise SystemExit(1)
+
+    if not args.dry_run:
+        log.info(f"Loaded {len(_senders_pool)} sender accounts for load balancing.")
 
     if args.health_port > 0:
         def run_health_server():
@@ -1591,8 +2049,9 @@ def main():
         threading.Thread(target=run_health_server, daemon=True).start()
 
     bounces = set()
-    if args.check_bounces and SENDER_EMAIL and SENDER_PASS:
-        bounces = set(sync_bounces(SENDER_EMAIL, SENDER_PASS))
+    if args.check_bounces and _senders_pool:
+        primary = _senders_pool[0]
+        bounces = set(sync_bounces(primary.email, primary.password))
     else:
         bounces = load_bounces()
 
@@ -1714,11 +2173,12 @@ def main():
 
     # ── Confirm before live send ──────────────────────────────────────────────
     if not args.dry_run:
-        print(f"\n[WARNING] About to send {len(companies)} real emails from {SENDER_EMAIL}")
-        confirm = input("   Type 'yes' to proceed: ").strip().lower()
+        console.print(f"  [dim]About to send[/] [bold white]{len(companies)}[/] [dim]real emails[/]")
+        confirm = console.input("  [dim]Type 'yes' to proceed:[/] ").strip().lower()
         if confirm != "yes":
             log.info("Aborted by user.")
             return
+        console.print()
 
     # ── Multi-Provider Initialization ─────────────────────────────────────────
     global _provider_pool
@@ -1746,90 +2206,110 @@ def main():
         log.error("No LLM providers configured. Please set LLM_API_KEY in your .env.")
         return
         
-    log.info(f"Loaded {len(_provider_pool)} LLM providers: {', '.join(p.name for p in _provider_pool)}")
+    log.info(f"Loaded [bold]{len(_provider_pool)}[/] LLM provider(s): {', '.join(p.name for p in _provider_pool)}")
 
-    # ── Generate (optionally parallel) ────────────────────────────────────────
+    # ── Startup banner ─────────────────────────────────────────────────────
+    print_banner(
+        run_dir=RUN_DIR,
+        dry_run=args.dry_run,
+        company_count=len(companies),
+        model=LLM_MODEL,
+        sender_count=len(_senders_pool),
+        resume=args.resume is not None,
+    )
+    # ── Generate (serial or parallel) ─────────────────────────────────────────────
     workers = max(1, args.workers)
+    todo_companies = [c for c in companies if c["Email"].strip().lower() not in generated]
+    console.print(Rule(f"[dim]Generating {len(todo_companies)} email(s)[/]", style="dim"))
+    console.print()
+
+    _gen_progress = Progress(
+        SpinnerColumn(spinner_name="dots", style="dim"),
+        TextColumn("[dim]{task.description}"),
+        console=console,
+        transient=True,
+    )
+
     if workers > 1:
         log.info(f"Parallel generation enabled: workers={workers}")
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            def process_company(company):
-                domain = company["Email"].split("@")[-1]
-                ctx = fetch_company_context(company["Company"], domain) if args.company_research else ""
-                return generate_and_gate_email(
-                    about_me,
-                    company,
-                    args.max_tokens,
-                    args.llm_timeout,
-                    args.llm_retries,
-                    args.llm_backoff,
-                    args.temperature,
-                    args.top_p,
-                    args.thinking,
-                    args.reasoning_effort,
-                    args.min_quality_score,
-                    company_context=ctx,
-                    variant_count=args.variant_count,
-                )
+        with _gen_progress as progress:
+            gen_task = progress.add_task("Generating...", total=len(todo_companies))
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                def process_company(company):
+                    domain = company["Email"].split("@")[-1]
+                    ctx = fetch_company_context(company["Company"], domain) if args.company_research else ""
+                    return generate_and_gate_email(
+                        about_me, company, args.max_tokens, args.llm_timeout,
+                        args.llm_retries, args.llm_backoff, args.temperature,
+                        args.top_p, args.thinking, args.reasoning_effort,
+                        args.min_quality_score, company_context=ctx,
+                        variant_count=args.variant_count,
+                    )
 
-            futures = {
-                pool.submit(process_company, company): company
-                for idx, company in enumerate(companies, start=1)
-                if company["Email"].strip().lower() not in generated
-            }
-
-            for future in as_completed(futures):
-                company = futures[future]
-                co_name = company["Company"].strip()
-                to_addr = company["Email"].strip()
+                futures = {
+                    pool.submit(process_company, company): company
+                    for company in todo_companies
+                }
+                for future in as_completed(futures):
+                    company = futures[future]
+                    co_name  = company["Company"].strip()
+                    to_addr  = company["Email"].strip()
+                    email_key = to_addr.lower()
+                    try:
+                        generated[email_key] = future.result()
+                        stats["generation_success"] += 1
+                        progress.update(gen_task, advance=1,
+                                        description=f"done  {co_name}")
+                        save_checkpoint(0, generated, sent_log)
+                    except Exception as e:
+                        stats["generation_failed"] += 1
+                        failures.append({"company": co_name, "email": to_addr,
+                                         "stage": "generation", "error_message": str(e)})
+                        log.error(f"Generation failed for {co_name}: {e}")
+                        progress.update(gen_task, advance=1,
+                                        description=f"error {co_name}")
+                        save_checkpoint(0, generated, sent_log)
+    else:
+        with _gen_progress as progress:
+            gen_task = progress.add_task("Generating...", total=len(todo_companies))
+            for idx, company in enumerate(todo_companies, start=1):
+                to_addr   = company["Email"].strip()
                 email_key = to_addr.lower()
+                co_name   = company["Company"].strip()
+                progress.update(gen_task,
+                                description=f"{co_name}",
+                                advance=0)
+                log.info(f"[{idx}/{len(todo_companies)}] Generating for [bold]{co_name}[/]")
+                domain = to_addr.split("@")[-1]
+                ctx = fetch_company_context(co_name, domain) if args.company_research else ""
                 try:
-                    generated[email_key] = future.result()
+                    generated[email_key] = generate_and_gate_email(
+                        about_me, company, args.max_tokens, args.llm_timeout,
+                        args.llm_retries, args.llm_backoff, args.temperature,
+                        args.top_p, args.thinking, args.reasoning_effort,
+                        args.min_quality_score, company_context=ctx,
+                        variant_count=args.variant_count,
+                    )
                     stats["generation_success"] += 1
-                    log.info(f"Generated email for {co_name}")
+                    progress.update(gen_task, advance=1,
+                                    description=f"done  {co_name}")
                     save_checkpoint(0, generated, sent_log)
                 except Exception as e:
                     stats["generation_failed"] += 1
-                    failures.append({"company": co_name, "email": to_addr, "stage": "generation", "error_message": str(e)})
-                    log.error(f"Generation failed for {co_name}: {e}")
+                    failures.append({"company": co_name, "email": to_addr,
+                                     "stage": "generation", "error_message": str(e)})
+                    log.error(f"Generation failed for [bold]{co_name}[/]: {e}")
+                    progress.update(gen_task, advance=1,
+                                    description=f"error {co_name}")
                     save_checkpoint(0, generated, sent_log)
-    else:
-        for idx, company in enumerate(companies, start=1):
-            to_addr = company["Email"].strip()
-            email_key = to_addr.lower()
-            if email_key in generated:
-                continue
-            co_name = company["Company"].strip()
-            log.info(f"[{idx}/{len(companies)}] Generating email for {co_name} -> {to_addr}")
-            domain = to_addr.split("@")[-1]
-            ctx = fetch_company_context(co_name, domain) if args.company_research else ""
-            try:
-                generated[email_key] = generate_and_gate_email(
-                    about_me,
-                    company,
-                    args.max_tokens,
-                    args.llm_timeout,
-                    args.llm_retries,
-                    args.llm_backoff,
-                    args.temperature,
-                    args.top_p,
-                    args.thinking,
-                    args.reasoning_effort,
-                    args.min_quality_score,
-                    company_context=ctx,
-                    variant_count=args.variant_count,
-                )
-                stats["generation_success"] += 1
-                save_checkpoint(0, generated, sent_log)
-            except Exception as e:
-                stats["generation_failed"] += 1
-                failures.append({"company": co_name, "email": to_addr, "stage": "generation", "error_message": str(e)})
-                log.error(f"  Generation failed for {co_name}: {e}")
-                save_checkpoint(0, generated, sent_log)
 
-    # ── Preview + send (sequential) ───────────────────────────────────────────
+    # ── Preview + send (sequential) ─────────────────────────────────────────────
     success_count = 0
     fail_count = 0
+
+    console.print()
+    console.print(Rule("[dim]Sending[/]", style="dim"))
+    console.print()
 
     for idx, company in enumerate(companies, start=1):
         to_addr = company["Email"].strip()
@@ -1839,14 +2319,24 @@ def main():
         result = generated.get(email_key)
         if not result:
             fail_count += 1
-            # Still save checkpoint so we skip this failed generation company on resume
             save_checkpoint(0, generated, sent_log)
             continue
 
         subject = result["subject"]
-        body = result["body"]
+        body    = result["body"]
+        company["quality_score"] = result.get("quality_score")
 
         print_preview(company, subject, body, idx, len(companies))
+
+        if args.business_hours and not args.dry_run:
+            while True:
+                now = datetime.now()
+                is_weekend = now.weekday() >= 5
+                is_business_hour = 9 <= now.hour < 17
+                if not is_weekend and is_business_hour:
+                    break
+                log.info("Outside business hours. Pausing SMTP delivery until next business window...")
+                time.sleep(300)
 
         sent_ok = send_email(to_addr, subject, body, company_name=co_name, dry_run=args.dry_run)
 
@@ -1861,14 +2351,16 @@ def main():
         emails_attempted.append(email_entry)
 
         if sent_ok:
-            status = "DRY-RUN" if args.dry_run else "SENT"
+            status = "DRY-RUN" if args.dry_run else "SUCCESS"
             log.info(f"  {status}: {co_name}")
+            log_status(status, f"{co_name} -> {to_addr}")
             if not args.dry_run:
                 mark_sent(sent_log, to_addr, co_name)
             success_count += 1
             stats["send_success"] += 1
         else:
             log.warning(f"  FAILED: {co_name}")
+            log_status("FAILED_SMTP", f"{co_name} -> {to_addr}")
             fail_count += 1
             stats["send_failed"] += 1
             failures.append({"company": co_name, "email": to_addr, "stage": "send", "error_message": "SMTP send failed"})
@@ -1880,18 +2372,20 @@ def main():
             log.info(f"  Waiting {RATE_LIMIT_S}s before next send...")
             time.sleep(RATE_LIMIT_S)
 
-    # ── Summary ───────────────────────────────────────────────────────────────
-    print(f"\n{'-'*64}")
-    print(f"  Done.  Success: {success_count}  |  Failed: {fail_count}")
-    if args.dry_run:
-        print("  (Dry run — no emails were actually sent)")
-    print(f"{'-'*64}\n")
-
     # Generate run reports
     generate_run_report(stats, failures, emails_attempted, args)
+    
+    # ── Final summary ─────────────────────────────────────────────────────────
+    print_summary(
+        success_count=success_count,
+        fail_count=fail_count,
+        stats=stats,
+        dry_run=args.dry_run,
+        run_dir=RUN_DIR,
+        report_path=str(RUN_DIR / "run_report_*.md")  # Will be exact path in real use
+    )
 
-    # Delete checkpoint file on successful complete
-    delete_checkpoint()
+    log.info("Checkpoint retained securely.")
 
 
 if __name__ == "__main__":
