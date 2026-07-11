@@ -46,6 +46,42 @@ Most cold email scripts just inject a `{{company_name}}` variable into a static 
 
 ---
 
+## 🏗️ Architecture & Pipeline Workflow
+
+The diagram below illustrates how target company details are dynamically matched with your portfolio context, and then validated through quality gates:
+
+```mermaid
+graph TD
+    A[CSV Input: Company, Name, Email] --> B[load_companies]
+    B --> C{Tag available in CSV?}
+    C -- No --> D[infer_company_tag]
+    D --> E[Scraped Homepage/Context Text]
+    E -->|Keyword Token Intersection| F[Resolve Best Tag: Fintech, Security, Audio, ML, etc.]
+    C -- Yes --> G[Use CSV Tag]
+    F --> H[build_candidate_context]
+    G --> H
+    H -->|Selects relevant projects from DOMAIN_PROJECT_MAP| I[Injects CLASP / Regavis / RAGS descriptions]
+    I --> J[LLM Generation]
+    J --> K[Format validation: 4 Paragraphs, Dynamic Subject]
+    K --> L[Programmatic python sign-off append]
+    L --> M[calculate_quality_score Gate]
+```
+
+### 📊 Summary of Upgraded Components
+
+| Component | Legacy Code (v1.0) | Upgraded Code (v2.0) | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Token Budget** | `GEN_MAX_TOKENS = 420` | `GEN_MAX_TOKENS = 1500` | Fixes mid-generation truncation crash |
+| **Subject Lines** | Hardcoded static string variable | Dynamically generated from company context | Improves open rates and personalization |
+| **CSV Columns** | `Company, Email, Tag, Region, Note` | `Company, Name, Email` | Simplifies pipeline setup |
+| **Project Routing** | Direct CSV tag mapping | Dynamic keyword-based context matching | Preserves project targeting without manual tags |
+| **Quality Gate** | 100 points: word count & CSV Tag/Note checks | 100 points: name, context match, length sanity | Fits 200-350 word format without false penalties |
+| **Contact Score** | 10-point scale: Tag/Note/Region weight | 5-point scale: Email validity, corporate domain, sent history | Removes dead weight columns |
+| **Fallback Template** | Legacy 4-bullet layout with old details | Modern 4-paragraph layout with CLASP & Regavis | Matches standard generation format |
+| **Checkpoint Sender** | Index-based lookup (`"1"`, `"2"`) | Email-based lookup (with fallback to index string) | Restores checkpoint safety and migration compatibility |
+
+---
+
 ## ⚙️ Quick Start
 
 ### 1. Installation
