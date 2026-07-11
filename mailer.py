@@ -1928,6 +1928,8 @@ def main():
                         help="Verify DNS MX records before generating/sending (default: disabled)")
     parser.add_argument("--health-port", type=int, default=0,
                         help="Port to run a background health check HTTP server on (default 0=disabled)")
+    parser.add_argument("--folder", type=str, default=None,
+                        help="Specify a folder containing the target CSV and where run logs/reports will be saved")
     args = parser.parse_args()
 
     start_time_iso = datetime.now().isoformat()
@@ -1948,7 +1950,29 @@ def main():
 
     # ── Setup Run Environment ─────────────────────────────────────────────────
     global RUN_DIR, LOG_FILE, CHECKPOINT_FILE, STATUS_LOG, LOW_QUALITY_QUEUE
-    runs_base = BASE_DIR / "runs"
+    global CSV_FILE, SENT_LOG, BOUNCED_LOG, COMPANY_CACHE, GEN_CACHE
+
+    if args.folder:
+        folder_dir = Path(args.folder.strip())
+        folder_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Override global paths to be folder-specific
+        csv_path = folder_dir / "hr_emails_directory.csv"
+        if not csv_path.exists():
+            csv_files = list(folder_dir.glob("*.csv"))
+            if csv_files:
+                csv_path = csv_files[0]
+        CSV_FILE = csv_path
+        
+        SENT_LOG      = folder_dir / "sent_log.json"
+        BOUNCED_LOG   = folder_dir / "bounced_log.json"
+        COMPANY_CACHE = folder_dir / "company_context_cache.json"
+        GEN_CACHE     = folder_dir / "generation_cache.json"
+        
+        runs_base = folder_dir / "runs"
+    else:
+        runs_base = BASE_DIR / "runs"
+
     runs_base.mkdir(exist_ok=True)
 
     if args.resume is not None:

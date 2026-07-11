@@ -15,37 +15,6 @@
 
 ---
 
-## ✨ Why Auto Mailer?
-
-Most cold email scripts just inject a `{{company_name}}` variable into a static template. **Auto Mailer is different.** It operates as an autonomous agent that researches the company, writes a custom 4-paragraph email referencing their specific domain, grades its own writing against strict heuristics, and safely routes delivery through load-balanced SMTP pools.
-
-<details>
-<summary><b>🔥 Click to see the Core Features</b></summary>
-
-### 🧠 Agentic Personalization
-- **Web Context Scraping:** Automatically visits the target company's domain, scraping `<title>` and `<meta name="description">` to inject real-world context into the LLM prompt.
-- **Dynamic Prompting:** Fuses your markdown `about_me.md` profile with the target company's live context for hyper-personalized output.
-- **Multi-Provider Zero-Downtime Cascade:** Load up to 10 API keys across NVIDIA NIM, Groq, OpenRouter, Google Gemini, and Cerebras simultaneously.
-- **Intelligent Fallbacks:** Uses a primary LLM model and automatically falls back to a faster/simpler model on reasoning timeouts or rate limits.
-
-### 🧪 Multi-Variant Generation & Quality Gating
-- **A/B Testing on the Fly:** Configure `--variant-count N` to generate `N` different email variants in parallel.
-- **Strict Quality Gating:** Every generated draft is internally scored (0-100) based on conciseness, relevance, tone, and spam-trigger absence. Only the highest-scoring variant is sent.
-
-### 🛡️ Unmatched Deliverability Protections
-- **Pre-Send DNS Check:** Queries `MX` records via `dnspython` to skip domains with no valid mail exchanges.
-- **IMAP Bounce Syncing:** Authenticates via IMAP to sync previously bounced emails to a local `bounced_log.json`, actively suppressing historical hard bounces.
-- **Jittered Rate Limiting:** Enforces strict delays between actual SMTP sends, applying exponential backoff with random jitter.
-- **Connection Pooling:** Cycles connections through a rotating pool of authenticated senders to prevent spam-flagging.
-
-### 📈 Production-Ready Orchestration
-- **Atomic Checkpointing:** State is saved atomically (`os.replace`) to prevent JSON corruption during abrupt crashes.
-- **Minimalist CLI UI:** A beautiful, non-intrusive Rich terminal UI that tracks concurrency without spamming your logs.
-- **Run Reports:** Automatically generates detailed Markdown and JSON execution logs in `runs/YYYY-MM-DD/`.
-</details>
-
----
-
 ## 🏗️ Architecture & Pipeline Workflow
 
 The diagram below illustrates how target company details are dynamically matched with your portfolio context, and then validated through quality gates:
@@ -95,29 +64,28 @@ pip install -r requirements.txt
 ### 2. Configuration (`.env`)
 Create a `.env` file in the root directory. Auto Mailer v2 has moved *all* tunable parameters to environment variables for maximum flexibility.
 
-<details>
-<summary><b>📝 View sample .env configuration</b></summary>
-
 ```env
-# Primary Provider (e.g., NVIDIA NIM)
+# Primary Provider (e.g., NVIDIA NIM or DeepSeek)
 LLM_API_KEY=nvapi-your-key-here
 LLM_BASE_URL=https://integrate.api.nvidia.com/v1
 LLM_MODEL=meta/llama-3.3-70b-instruct
-LLM_FALLBACK_MODEL=mistralai/mixtral-8x22b-instruct-v0.1
+LLM_FALLBACK_MODEL=deepseek-ai/deepseek-v4-flash
 
-# Sender configuration
-SENDER_NAME="Your Name"
-SENDER_EMAIL=your.email@gmail.com
+# Sender Configuration
+SENDER_NAME="Arnav Sagar"
+SENDER_EMAIL=arnavsagar1510@gmail.com
 SENDER_APP_PASSWORD=your_gmail_app_password
 
 # Limits & Quality Gates
 RATE_LIMIT_SECONDS=8
 GEN_MAX_TOKENS=1500
 EMAIL_MAX_WORDS=400
+EMAIL_MAX_SUBJECT_LEN=100
+MIN_CONTACT_SCORE=2
 MIN_QUALITY_SCORE=70
+VARIANT_COUNT=1
 ```
 > **Note:** If using Gmail, you must use an [App Password](https://myaccount.google.com/apppasswords) with 2FA enabled.
-</details>
 
 ### 3. Populate Assets
 Ensure the following files are populated in the root directory:
@@ -127,44 +95,103 @@ Ensure the following files are populated in the root directory:
 
 ---
 
-## 🚀 CLI Usage
+## 🚀 Core Features User Guide
 
-Auto Mailer's CLI exposes powerful flags to tailor your campaigns.
-
-### 🧪 Safe Previews & Dry Runs (Recommended)
-Preview emails locally with the beautiful Rich terminal UI without actually dispatching them:
+### 📂 1. Campaign Folder Encapsulation (`--folder`)
+Isolate different outreach campaigns cleanly. Instead of mixing targets and checkpoints, you can isolate all inputs and output run reports into a specific campaign directory:
 ```bash
-python mailer.py --dry-run --company-research --variant-count 2
+python mailer.py --folder campaigns/summer_2026 --dry-run
 ```
+* **Behavior:**
+  - Auto Mailer searches for the CSV database at `campaigns/summer_2026/hr_emails_directory.csv` (falls back to any `.csv` in that folder if the default name is missing).
+  - Saves run reports, checkpoints, logs, and cache indexes inside `campaigns/summer_2026/runs/` and `campaigns/summer_2026/`.
 
-### 🎯 Targeted Campaigns
-Process a limited subset of the CSV directory using the limit flag:
+---
+
+### 🧪 2. Safe Previews & Dry Runs (`--dry-run`)
+Generate and preview emails locally using the Rich terminal interface without sending actual emails:
 ```bash
-python mailer.py --limit 10
+python mailer.py --dry-run --company-research --limit 5
 ```
+* **Key Benefit:** Allows you to verify LLM response formatting, dynamic subject headers, and personalization tokens before dispatching them.
 
-### 💥 Full Production Run
-A fully optimized production run, complete with deliverability checks, web research, and live telemetry:
+---
+
+### 🔍 3. Active Company Web Research (`--company-research`)
+Visits the target company's domain, scraping `<title>` and `<meta>` description headers to inject real-world context into the LLM prompt.
 ```bash
-python mailer.py --company-research --check-bounces --workers 4
+python mailer.py --company-research --limit 10
 ```
+* **Dynamic Routing:** If a company does not have a hardcoded `Tag` parameter, the scraped context is sent to `infer_company_tag()` which uses keyword token intersection to match it to a domain (`Fintech`, `Security`, `Audio`, `Vision/Aerospace`, `5G/Telecom`, `AI/ML`). This dynamically selects the best projects from your portfolio to pitch.
 
-### 🔄 Resuming From Interruptions
-If the script is interrupted, safely resume exactly where it left off using atomic checkpoints:
+---
+
+### 🧪 4. Multi-Variant Generation (`--variant-count`)
+Generate multiple email drafts in parallel, grade them against quality scoring gates, and choose only the highest-scoring candidate to deliver:
+```bash
+python mailer.py --company-research --variant-count 3 --limit 5
+```
+* **Usage:** Setting `--variant-count 3` generates 3 independent emails with slightly different temperatures and selects the most relevant, natural-sounding copy.
+
+---
+
+### 🔄 5. Resuming From Interruptions (`--resume`)
+If the script gets interrupted by a network timeout or system shutdown, you can safely resume exactly where you left off without duplicating emails:
 ```bash
 python mailer.py --resume
+```
+* **Behavior:** Loads the last processed index from the run checkpoint and continues the sequence. You can also specify a folder to resume a specific run:
+```bash
+python mailer.py --resume campaigns/summer_2026/runs/2026-07-11
 ```
 
 ---
 
-## 🎛️ Advanced Configuration Options
+### 🛡️ 6. Hard Bounce Syncing & Suppression (`--check-bounces`)
+Connects to your Gmail/SMTP inbox via IMAP to scan for delivery failure notifications and adds those emails to `bounced_log.json` to automatically suppress future attempts:
+```bash
+python mailer.py --check-bounces --company-research
+```
 
-<details>
-<summary><b>⚙️ CLI Arguments Reference</b></summary>
+---
+
+### 🌐 7. Pre-Send DNS MX Verification (`--check-mx`)
+Queries DNS MX records before generating an email to ensure the domain actually has a working mail server:
+```bash
+python mailer.py --check-mx --limit 50
+```
+* **Benefit:** Saves API tokens by skipping invalid domains before making the LLM inference call.
+
+---
+
+## 📈 Scoring & Gating Systems
+
+Auto Mailer v2 uses two main heuristic gates to evaluate target quality:
+
+### 1. Contact Gate (0 - 5 Scale)
+Evaluates whether a target recipient is valid. Controlled by `MIN_CONTACT_SCORE` (default: `2`).
+- **Valid Email Format:** +2 points
+- **Corporate Domain Indicator:** +2 points (for domains ending in `.co`, `.org`, `.gov`, `.edu`, etc.), +1 point for custom domains, +0 points for generic personal emails (gmail/yahoo).
+- **Communication History:** +1 point if not previously contacted, -1 point if contacted.
+
+### 2. Quality Gate (0 - 100 Scale)
+Evaluates whether the generated email is well-written. Controlled by `MIN_QUALITY_SCORE` (default: `70`).
+- **Subject Length ≤ 100 characters:** +5 points
+- **Body Length Sanity (50-500 words):** +5 points
+- **Company Name Mentioned in Body:** +20 points
+- **Scraped Context Keyword Matched:** +15 points (at least one non-stopword token from the scraped web text appears in the generated body)
+- **Technical Personalization Keywords:** +25 points (presence of keywords like `llm`, `rag`, `yolo`, `proxy`, `deepfake`, etc.)
+- **Professional Tone Check:** +15 points (absence of stiff phrases like *"please find attached my cv"*, *"respected sir"*, etc.)
+- **Spam Likelihood Check:** +15 points (absence of spam triggers like *"100% guaranteed"*, *"urgent"*, etc.)
+
+---
+
+## 🎛️ CLI Arguments Reference
 
 | Argument | Description | Default |
 | :--- | :--- | :--- |
 | `--dry-run` | Generate and print emails to console without sending. | `False` |
+| `--folder` | Encapsulate CSV inputs, logs, and checkpoints inside a folder. | `None` |
 | `--company-research` | Enable active `BeautifulSoup4` web scraping. | `False` |
 | `--variant-count` | Generate `N` variants concurrently. | `1` |
 | `--check-bounces` | Parse IMAP inbox for hard bounces to suppress future attempts. | `False` |
@@ -173,8 +200,6 @@ python mailer.py --resume
 | `--limit` | Maximum number of successful contacts to process. | All |
 | `--resume` | Resume execution from the latest checkpoint in `runs/`. | `False` |
 
-</details>
-
 ---
 
 ## 📁 Repository Structure
@@ -182,14 +207,19 @@ python mailer.py --resume
 ```text
 auto-mailer/
 ├── mailer.py               # 🧠 Core orchestration engine
+├── test_mailer.py          # 🧪 Full Unit testing suite
+├── send_from_saveprogress.py # 📇 Offline/Cache direct sender
 ├── requirements.txt        # 📦 Dependencies (OpenAI, Rich, BS4, etc.)
 ├── .env                    # 🔑 Global tunable configurations
-├── hr_emails_directory.csv # 📇 Target directory
+├── hr_emails_directory.csv # 📇 Target directory (fallback)
 ├── about_me.md             # 📝 Identity & Pitch grounding context
-├── runs/                   # 📂 State management (logs, checkpoints, outputs)
-│   └── YYYY-MM-DD/         # 🕒 Daily run isolation
-├── sent_log.json           # 🛑 Persistent deduplication log
-└── bounced_log.json        # 🚫 Persistent suppression blocklist
+├── resume.pdf              # 📄 Attachment file
+└── campaigns/              # 📂 Isolated campaigns folders
+    └── summer_2026/        # 📂 Target campaign folder
+        ├── hr_emails_directory.csv
+        ├── sent_log.json
+        ├── bounced_log.json
+        └── runs/           # 📂 Isolated campaign execution logs
 ```
 
 ---
