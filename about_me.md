@@ -1,117 +1,80 @@
 # Arnav Sagar — Profile
 
 ## Contact
-- **Email:** arnavsagar1510@gmail.com   
-- **Phone:** +91-6284962948  
-- **GitHub:** github.com/zibranxo  
-- **LinkedIn:** linkedin.com/in/arnvsr  
-- **LeetCode:** arnvsr  
+- **Email:** arnavsagar1510@gmail.com
+- **Phone:** +91-6284962948
+- **GitHub:** github.com/zibranxo
+- **LinkedIn:** linkedin.com/in/arnvsr
+- **LeetCode:** arnvsr
 
 ---
 
 ## Education
 
-**Delhi Technological University (DTU)**, New Delhi  
+**Delhi Technological University (DTU)**, New Delhi
 B.Tech – Software Engineering | CGPA: **8.75/10** | Jul 2024 – Jun 2028
 
-**Kendriya Vidyalaya Sector-47**, Chandigarh  
-12th: 93% | 10th: 94.4% | 2022–2023
+**Kendriya Vidyalaya Sector-47**, Chandigarh
+12th: 93% | 10th: 94.4% | 2020–2023
 
 ---
 
 ## Work Experience
 
+### Regavis Labs Pvt Ltd — Machine Learning Intern
+*Jun 2026 – Present*
+
+Architecting a two-stage cascade for real-time audio deepfake detection on RingWave, a live-calling platform: a Voice Activity Detector gates audio into a lightweight LFCC-LCNN first-pass screener, escalating only ambiguous segments to an SSL-based second-stage verifier (XLSR-53 + AASIST). This cuts average inference compute cost by **85%** versus running full verification on every frame. Includes a Hindi/Indic data bootstrap strategy to cover underrepresented accents, VoIP-channel augmentation for real-world call degradation, and a two-policy aggregation layer that reconciles the two stages' outputs into a single call-level verdict.
+
+### 5G Lab, Department of Telecommunications (GoI) — DTU — Research Intern
+*Jun 2025*
+*Stack: YOLOv8, OpenCV, URLLC, MEC, CUDA*
+
+- Engineered a **sub-25ms P95** on-device inference pipeline via per-channel entropy calibration — **4× model compression**, **1.8× throughput**, <1.5% mAP loss — deployed across CUDA, Metal MPS, and CPU backends.
+- Built a real-time multi-person tracker (Lucas-Kanade optical flow + IoU-based keypoint association) feeding a self-supervised trajectory autoencoder (~1,600 params, <0.1ms/track) over a simulated 5G URLLC transport layer (2ms latency, 0.1% packet loss).
+- **Presented at PEC Chandigarh** as original research.
+
 ### AIMS-DTU — Research Intern (LLM Safety)
 *Jun 2025 – Jul 2025*
 
-- Architected a 3-stage LLM moderation pipeline: sub-10ms regex-based filters → semantic embeddings → fine-tuned DistilBERT augmented with XGBoost + LOF on TF-IDF features to surface zero-day prompt injections outside the classifier's training distribution.
-- Engineered a risk-scored mitigation engine across 5 harm categories with 4-tier decision logic using contextual NER + POS proximity analysis.
-- Validated against red-teaming prompts on OpenChat-3.5 with GPT-4o-mini cross-validation.
-- Served the entire pipeline via a production FastAPI server.
-
-### 5G LAB, Department of Telecommunications, DTU — Summer Research Intern
-*Jun 2025*  
-*Stack: YOLOv8, OpenCV, URLLC, MEC, CUDA*
-
-- Engineered a sub-25ms P95 end-to-end on-device inference pipeline via per-channel entropy calibration: 4× model compression, 1.8× throughput at <1.5% mAP loss.
-- Deployed per-person Lucas-Kanade optical flow on alternate frames with IoU-based keypoint association across CUDA, Metal MPS, and CPU backends.
-- Designed a self-supervised trajectory autoencoder (~1,600 params, <0.1ms/track) augmenting 5 geometric IDS rules to surface 6 behavioural threat types without labeled data.
-- Simulated 5G URLLC transport layer (1–5ms latency, 0.1% packet loss) for structured edge-to-core threat delivery.
-- **Presented research at PEC Chandigarh** as original work.
+Deployed a session-aware jailbreak and toxicity classifier: MiniLM cosine similarity, SHAP token attribution for explainability, adversarial input normalization (homoglyph, zero-width character, base64 decoding), Redis caching, and ONNX-optimized inference. Served via production FastAPI.
 
 ---
 
 ## Projects
 
-### YTRAG — YouTube RAG Chatbot
-*Stack: JavaScript, OpenAI Embeddings, IndexedDB, Vite*  
-*GitHub: github.com/zibranxo/ytrag*
+### CLASP — Claude API Switching Proxy
+*GitHub: github.com/zibranxo/clasp*
 
-Full end-to-end RAG pipeline over YouTube transcripts: transcript fetch → semantic chunking (~1000 tokens, 100-char overlap) → embed with text-embedding-3-small (1536 dims) → store in IndexedDB → cosine similarity retrieval (TOP_K=3, threshold=0.5) → LLM generation. Dual provider: OpenAI or local Ollama. Timestamp-linked citations, chat history, deployed UI. Key insight: RAG quality lives in retrieval design, not generation — threshold and chunk overlap tuning outweighs model choice.
+Rate-limit-aware multi-provider proxy routing LLM traffic (Claude Code / Codex-style clients) across **18 inference providers**, using a pre-emptive token-bucket limiter and multi-key pool rotation with circuit breakers to eliminate 429 errors. Includes an async priority queue with SSE keep-alive absorption to buffer requests during quota exhaustion, a three-tier LRU/SQLite/semantic (FAISS) cache, and an Anthropic↔OpenAI protocol translator. **934 passing tests.**
 
----
-
-### LLM Safety Shield (Personal Project)
-*Stack: Python, MiniLM, DistilBERT, SHAP, Redis, ONNX, FastAPI*
-
-Session-aware jailbreak and toxicity classifier with MiniLM cosine similarity, SHAP token attribution for explainability, adversarial normalization (homoglyph, zero-width char, base64 decoding), Redis caching for sub-ms repeat queries, ONNX-optimized inference, and active-learning flywheel for continuous improvement.
-
----
-
-### Vera Bot — magicpin AI Challenge
-*Stack: FastAPI, Python, model-agnostic (OpenAI / Anthropic / Gemini / DeepSeek / Groq)*
-
-Prompt-dispatch composer for merchant ↔ customer messaging. Trigger-kind routing, 4 context inputs, post-LLM validator (URL strip, CTA check, empty-body guard), auto-reply detector (regex + repeat counter: 1 flag → warn, 2 → 24h hold, 3 → exit), intent transition handler. Temperature=0 for deterministic outputs.
-
----
-
-### Retrieval Augmentation System
-*Stack: Python, FAISS, BM25, cross-encoder, LlamaIndex*
-
-Multi-stage RAG over PDF corpora with semantic chunking, hierarchical small-to-big indexing, HyDE-based query expansion, and sub-question decomposition. Hybrid dense-sparse retrieval (FAISS + BM25) with RRF fusion, cross-encoder reranking, MMR diversity selection, contextual compression, and CRAG-based hallucination suppression.
-
----
-
-### JAILS — Jailbreak Instruction Leakage Detection System
-*Stack: Python, scikit-learn (Gradient Boosting, RF, LR), LOF, TF-IDF*
-
-Hybrid jailbreak/prompt-injection detector. Features: semantic similarity, linguistic heuristics, pattern matching (instruction overrides, role-play, coercion, privilege escalation), LOF for zero-day attacks. Fully interpretable output: SAFE/JAILBREAK + confidence score + risk level + feature-level reasoning.
-
----
-
-### CAF-OTSRNet — Optical-Guided Thermal Super-Resolution
+### CAF-OTSRNet — Cross-Attention Fusion Thermal Super-Resolution
 *Stack: PyTorch, Streamlit, Gradio, Rasterio, GeoPandas*
+*GitHub: github.com/zibranxo/caf-otsr-net · Demo available*
 
-Triple-encoder cross-attention fusion for thermal SR. Two-stage alignment: global affine (Spatial Transformer Network) + learned deformable local correction. Texture-guided safety mechanism suppresses hallucinated thermal edges via per-pixel gating. Progressive Laplacian decoder. Physics-aware losses. Pixel-wise uncertainty estimation. **PSNR +15.74%, SSIM +8.22% vs SOTA on ISRO dataset.**
+Reconstructs high-resolution thermal infrared imagery from low-resolution thermal input, guided by high-resolution multispectral optical imagery, on a dataset provided by **ISRO**. Two-stage geometric alignment (Spatial Transformer Network for global affine correction + a learned deformable displacement field for sub-pixel local correction) feeds three modality-specific encoders (thermal, optical + NDVI/NDWI/NDBI spectral indices, Sobel-based texture). A cross-attention fusion block queries optical detail through thermal features — preventing optical structures from overriding true temperature signal — gated by a per-pixel texture-safety network that suppresses hallucinated edges. A progressive Laplacian decoder reconstructs the output in stages (e.g. 32×32 → 64×64 → 128×128) with residual corrections and thermal-encoder skip connections, and the model additionally outputs pixel-wise uncertainty estimates. **PSNR +15.74%, SSIM +8.22%** vs. SOTA.
 
----
+### Retrieval Augmentation System (RAGS)
+*Stack: Python, FAISS, BM25, cross-encoder, ChromaDB, bge-m3, bge-reranker-v2-m3*
 
-### Text Splitting & Embedding Visualizer
-*Stack: JavaScript, HTML/CSS*  
-**Live demo: https://text-split.netlify.app/**
-
-Interactive visualization of RAG chunking strategies (character, token, sentence, recursive) with metrics, overlap highlighting, and chunk-size stats. Cosine semantic similarity matrix + k-Means clustering with PCA/t-SNE/UMAP projections. Already deployed and publicly accessible.
-
----
-
-### AI vs Human Text Classification
-*Stack: Python, PyTorch, RoBERTa (fine-tuned), scikit-learn, GPU XGBoost*
-
-14+ model benchmark on ~200K samples. TF-IDF + stylometric features. GPU pipeline: 35 min → 6 min (5.8× speedup). **RoBERTa accuracy: 0.9996.**
-
----
+Multi-stage RAG pipeline processing 15k+ PDF pages: semantic chunking, hierarchical small-to-big indexing, HyDE-based query expansion, and sub-question decomposition, improving answer relevance by **38%** (GPT-4-judge evaluated). Hybrid dense-sparse retrieval (FAISS + BM25) with RRF fusion, cross-encoder reranking, MMR diversity selection, contextual compression, and a DistilBERT-based CRAG hallucination evaluator — reducing hallucination rate by **47%**. Built with a full ablation-study framework to isolate each component's contribution; plain Python orchestration, no LangChain.
 
 ### Hybrid CTC-Attention Scene Text Recognition (OCR)
 *Stack: Python, PyTorch, VGG-CNN, BiLSTM, Bahdanau attention, W&B*
+*GitHub: github.com/zibranxo/ocr-ctc*
 
-CRNN: VGG backbone + 2-layer BiLSTM + CTC head + attention decoder. Joint loss: 0.3·CTC + 0.7·Attention. ~89% word accuracy on IIIT5K, trained on 9M MJSynth images.
+CRNN architecture: VGG-style CNN backbone + 2-layer BiLSTM encoder + Bahdanau attention decoder, trained with a joint CTC and cross-entropy loss and beam search decoding to stabilize early training and refine character alignment. **89% word accuracy** on IIIT5K after training on 9M MJSynth images.
 
----
+### Text Splitting and Embedding Visualizer
+*Stack: JavaScript, HTML/CSS*
+*GitHub: github.com/zibranxo/chunk · Live demo: text-split.netlify.app*
 
-### ZeroFall+ — Multi-Agent Security System
-*Stack: Python, RoBERTa, LLaMA, LoRA, PyTorch, Flask, Docker, blockchain*
+Interactive visualization tool for RAG chunking strategies — character, token, sentence, recursive splitting — with a cosine semantic similarity matrix, chunk-size statistics, and overlap metrics. Already deployed and publicly accessible; useful for explaining retrieval concepts to non-technical audiences live.
 
-Unified WAF + EDR pipeline with 6 autonomous agents. RoBERTa for anomaly detection, blockchain behavioral hashing for O(1) immutable threat memory, LoRA fine-tuning without catastrophic forgetting.
+### AI vs Human Text Classification System
+*Stack: Python, PyTorch, RoBERTa (fine-tuned), scikit-learn, GPU XGBoost*
+
+Benchmarked 8+ classical and ensemble models (Logistic Regression, SVM, Naive Bayes, Decision Trees, Random Forest + AdaBoost, kNN, ANN, attention-based LSTMs) against a fine-tuned RoBERTa on ~200K samples. **RoBERTa accuracy: 0.9996.** GPU-accelerated training pipeline cut training time from 35 min to 6 min.
 
 ---
 
@@ -119,14 +82,13 @@ Unified WAF + EDR pipeline with 6 autonomous agents. RoBERTa for anomaly detecti
 
 - **Languages:** Python, C/C++, JavaScript, HTML/CSS, SQL
 - **ML/AI Frameworks:** PyTorch, TensorFlow, ONNX, HuggingFace Transformers, OpenCV, Pandas, NumPy, LlamaIndex
-- **Infrastructure & Tools:** FastAPI, Docker, Git, W&B, ROS2 (Humble), Streamlit, Redis, FAISS
+- **Infrastructure & Tools:** FastAPI, Docker, Git, W&B, ROS2 (Humble), Streamlit, Redis, FAISS, AsyncIO, WebSockets
 
 ---
 
 ## Achievements
 
-- **National Finalist, Smart India Hackathon 2025** — Ahmedabad (ISRO problem statement)
-- **Research Presentation, PEC Chandigarh** — AI-Based Intrusion Detection in 5G Networks
+- **National Finalist, Smart India Hackathon 2025** — Ahmedabad, India (ISRO problem statement)
 - **Coordinator**, Business Bulls, DTU (Finance & Strategy Club)
 
 ---
@@ -136,13 +98,11 @@ Unified WAF + EDR pipeline with 6 autonomous agents. RoBERTa for anomaly detecti
 **Role type:** AI/ML Engineering internship or early-career role
 
 **Strongest fit areas:**
-- Applied AI / LLM systems — RAG pipelines, agent workflows, prompt engineering
+- Applied AI / LLM systems — RAG pipelines, multi-provider LLM infrastructure, prompt engineering
 - LLM safety, red-teaming, and evaluation
 - Edge AI / on-device ML inference
-- Agentic AI and voice AI (currently building RingWave: real-time voice deepfake detection using AASIST/WavLM/wav2vec2-XLS-R)
+- Audio/speech ML — deepfake and spoof detection, real-time inference under compute constraints
 
 **Location:** Delhi / Bangalore / remote (India) or remote global
 
-**Why relevant at 2nd year:** Two research internships completed before end of first year, both producing shipped systems — not coursework. I build end-to-end: data pipelines → model training → FastAPI serving → live demos. I can explain design decisions under pressure, debug in real time, and translate technical work into communication a non-technical team can act on.
-
-All subjects should be: Internship Application- Arnav Sagar(DTU)- AI-ML
+**Why relevant at 2nd year:** Three research/ML internships (AIMS-DTU, 5G Lab, Regavis Labs) completed before the end of second year, each producing a shipped or production-integrated system — not coursework. I build end-to-end: data pipelines → model training/architecture design → production serving (FastAPI) → live demos. I can explain design decisions under pressure, debug in real time, and translate technical work into communication a non-technical team can act on.
