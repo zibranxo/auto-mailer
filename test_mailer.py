@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 import json
 
 # Import the functions to test
@@ -11,7 +11,6 @@ from mailer import (
     calculate_quality_score,
     load_checkpoint,
     save_checkpoint,
-    delete_checkpoint,
     JSONParseError
 )
 
@@ -47,23 +46,21 @@ class TestMailer(unittest.TestCase):
             "Region": "India",
             "Tag": "AI/ML"
         }
-        # score = 2 (valid email) + 2 (corporate) + 3 (HR note) + 1 (India) + 2 (AI/ML) = 10
-        self.assertEqual(calculate_contact_score(co_ideal), 10)
+        # score = 2 (valid email) + 2 (corporate) + 1 (not contacted) = 5
+        self.assertEqual(calculate_contact_score(co_ideal), 5)
 
-        # Case 2: Generic gmail, tech note, non-India, non-AI tag
+        # Case 2: Generic gmail
         co_generic = {
             "Company": "Startup",
-            "Email": "founder@gmail.com",
-            "Note": "engineer",
-            "Region": "Global",
-            "Tag": "Fintech"
+            "Email": "founder@gmail.com"
         }
-        # score = 2 (valid email) + 0 (generic) + 2 (tech note) + 0 (Global) + 1 (other tag) = 5
-        self.assertEqual(calculate_contact_score(co_generic), 5)
+        # score = 2 (valid email) + 0 (generic) + 1 (not contacted) = 3
+        self.assertEqual(calculate_contact_score(co_generic), 3)
 
         # Case 3: Already contacted penalty
         sent_log = {"founder@gmail.com": {"company": "Startup"}}
-        self.assertEqual(calculate_contact_score(co_generic, sent_log), 4) # 5 - 1 = 4
+        # score = 2 (valid email) + 0 (generic) - 1 (contacted) = 1
+        self.assertEqual(calculate_contact_score(co_generic, sent_log), 1)
 
     def test_parse_email_json(self):
         # Case 1: Clean JSON
@@ -98,28 +95,35 @@ class TestMailer(unittest.TestCase):
 
     def test_calculate_quality_score(self):
         company = {"Company": "Google", "Tag": "AI/ML", "Note": "Hiring manager"}
+        company_context = "Google is a major technology company offering cloud platforms and web search services."
         
-        # High quality email
+        # High quality email (passes word count check, mentions Google, cloud context, and LLMs)
         subject_good = "AI Engineering Intern - Arnav Sagar"
-        body_good = "Dear Google Team, I am Arnav. I worked on LLMs, RAG, and YOLO. I would love to join Google as an AI/ML intern."
-        score_good = calculate_quality_score(subject_good, body_good, company)
+        body_good = (
+            "Hi Google Team, I am Arnav Sagar, a second-year Software Engineering student from DTU. "
+            "I worked on advanced AI/ML systems including LLMs, RAG, and YOLO. I have experience "
+            "building cloud platforms and low-latency moderations. I would love to join Google as an AI/ML intern "
+            "to work on your large-scale web search and indexing challenges."
+        )
+        score_good = calculate_quality_score(subject_good, body_good, company, company_context=company_context)
         
-        # Word counts: ~23 words (concise: +10 pts, subject <= 50: +5 pts) -> 15
-        # Mentions google (+15) and AI/ML tag (+15) -> 30
+        # Word counts: 64 words (sanity 50-500: +5 pts, subject <= 100: +5 pts) -> 10
+        # Mentions google (+20) and matches cloud context (+15) -> 35
         # Mentions LLM/RAG/YOLO (+25) -> 25
         # Tone clean (+15) -> 15
         # Spam clean (+15) -> 15
-        # Total score should be 100
+        # Total score: 100
         self.assertEqual(score_good, 100)
 
-        # Low quality email (stiff greeting, spam triggers, missing keywords)
+        # Low quality email (stiff greeting, spam triggers, missing keywords, too short)
         subject_bad = "URGENT!!! MUST READ APPLICATION FOR INTERNSHIP OPPORTUNITY AT GOOGLE"
         body_bad = "Dear Hiring Manager, please find attached my CV for your kind perusal. I am looking for a job. 100% guaranteed results."
-        score_bad = calculate_quality_score(subject_bad, body_bad, company)
+        score_bad = calculate_quality_score(subject_bad, body_bad, company, company_context=company_context)
         self.assertTrue(score_bad < 70)
 
+    @patch("mailer._atomic_write")
     @patch("mailer.CHECKPOINT_FILE")
-    def test_checkpoint_logic(self, mock_checkpoint_path):
+    def test_checkpoint_logic(self, mock_checkpoint_path, mock_atomic_write):
         # Setup mock file operations
         mock_checkpoint_path.exists.return_value = True
         
@@ -137,17 +141,16 @@ class TestMailer(unittest.TestCase):
         self.assertEqual(loaded["last_processed_index"], 5)
         
         # Test save checkpoint
-        mock_checkpoint_path.write_text = MagicMock()
         save_checkpoint(10, {1: {"subject": "S", "body": "B"}}, {})
-        mock_checkpoint_path.write_text.assert_called_once()
-        
-        # Test delete checkpoint
-        delete_checkpoint()
-        mock_checkpoint_path.unlink.assert_called_once()
+        mock_atomic_write.assert_called_once()
 
     @patch("mailer.OpenAI")
     def test_generate_email_mock(self, mock_openai):
+        mock_provider = MagicMock()
         mock_client = MagicMock()
+        mock_provider.client = mock_client
+        mock_provider.lock = MagicMock()
+        mock_provider.last_inference_time = 0.0
         mock_openai.return_value = mock_client
         
         # Setup mock response
@@ -158,27 +161,36 @@ class TestMailer(unittest.TestCase):
         
         company = {"Company": "MockInc", "Tag": "Tech", "Region": "US", "Note": "", "Email": "hi@mock.inc"}
         result = mailer.generate_email(
-            mock_client,
+            mock_provider,
             about_me="I am a coder",
             company=company,
             max_tokens=100
         )
         self.assertEqual(result["subject"], "Mocked Subject")
-        self.assertEqual(result["body"], "Mocked Body")
+        self.assertTrue(result["body"].startswith("Mocked Body"))
 
+    @patch("mailer.get_next_sender")
+    @patch("mailer.RESUME_PDF")
+    @patch("builtins.open", new_callable=mock_open, read_data=b"mock pdf content")
     @patch("mailer.smtplib.SMTP")
-    def test_send_email_mock(self, mock_smtp):
+    def test_send_email_mock(self, mock_smtp, mock_open_file, mock_resume_pdf, mock_get_next_sender):
         mock_server = MagicMock()
         mock_smtp.return_value = mock_server
+        mock_resume_pdf.exists.return_value = True
         
-        with patch("mailer.SENDER_EMAIL", "me@gmail.com"), patch("mailer.SENDER_PASS", "pass"):
-            result = mailer.send_email(
-                "test@example.com",
-                "Test Subj",
-                "Test Body",
-                company_name="TestCorp",
-                dry_run=False
-            )
+        mock_sender = MagicMock()
+        mock_sender.email = "me@gmail.com"
+        mock_sender.uses_count = 0
+        mock_sender.last_used = 0.0
+        mock_get_next_sender.return_value = mock_sender
+        
+        result = mailer.send_email(
+            "test@example.com",
+            "Test Subj",
+            "Test Body",
+            company_name="TestCorp",
+            dry_run=False
+        )
         self.assertTrue(result)
         mock_server.login.assert_called_once()
         mock_server.sendmail.assert_called_once()

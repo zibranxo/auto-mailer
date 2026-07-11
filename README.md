@@ -17,7 +17,7 @@
 
 ## ✨ Why Auto Mailer?
 
-Most cold email scripts just inject a `{{company_name}}` variable into a static template. **Auto Mailer is different.** It operates as an autonomous agent that researches the company, writes a custom 3-paragraph email referencing their specific domain, grades its own writing against strict heuristics, and safely routes delivery through load-balanced SMTP pools.
+Most cold email scripts just inject a `{{company_name}}` variable into a static template. **Auto Mailer is different.** It operates as an autonomous agent that researches the company, writes a custom 4-paragraph email referencing their specific domain, grades its own writing against strict heuristics, and safely routes delivery through load-balanced SMTP pools.
 
 <details>
 <summary><b>🔥 Click to see the Core Features</b></summary>
@@ -76,8 +76,8 @@ SENDER_APP_PASSWORD=your_gmail_app_password
 
 # Limits & Quality Gates
 RATE_LIMIT_SECONDS=8
-GEN_MAX_TOKENS=800
-EMAIL_MAX_WORDS=135
+GEN_MAX_TOKENS=1500
+EMAIL_MAX_WORDS=400
 MIN_QUALITY_SCORE=70
 ```
 > **Note:** If using Gmail, you must use an [App Password](https://myaccount.google.com/apppasswords) with 2FA enabled.
@@ -85,7 +85,7 @@ MIN_QUALITY_SCORE=70
 
 ### 3. Populate Assets
 Ensure the following files are populated in the root directory:
-- `hr_emails_directory.csv`: Columns `Company`, `Email`, `Tag`, `Region`, `Note`.
+- `hr_emails_directory.csv`: Columns `Company`, `Name`, `Email`.
 - `about_me.md`: Your detailed candidate profile/pitch.
 - `resume.pdf`: The attachment to send.
 
@@ -102,9 +102,9 @@ python mailer.py --dry-run --company-research --variant-count 2
 ```
 
 ### 🎯 Targeted Campaigns
-Filter targets by specific tags or regions to personalize your strategy:
+Process a limited subset of the CSV directory using the limit flag:
 ```bash
-python mailer.py --filter-region India --filter-tag Fintech --limit 10
+python mailer.py --limit 10
 ```
 
 ### 💥 Full Production Run
@@ -135,8 +135,6 @@ python mailer.py --resume
 | `--check-mx` | Query DNS for MX records before sending. | `False` |
 | `--workers` | Number of concurrent threads for LLM API calls. | `1` |
 | `--limit` | Maximum number of successful contacts to process. | All |
-| `--filter-region` | Only process companies in a specific region. | `None` |
-| `--filter-tag` | Only process companies with a specific tag. | `None` |
 | `--resume` | Resume execution from the latest checkpoint in `runs/`. | `False` |
 
 </details>

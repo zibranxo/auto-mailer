@@ -7,3 +7,4 @@ run_report_*
 *.csv
 mailer.log
 plan.md
+dev/*

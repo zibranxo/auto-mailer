@@ -93,13 +93,11 @@ def main():
             skip_count += 1
             continue
 
-        str_idx = str(idx)
-        if str_idx not in generated_cache:
+        cached_data = generated_cache.get(email_key) or generated_cache.get(str_idx)
+        if not cached_data:
             # Keep track of missing ones but don't spam if many
             missing_count += 1
             continue
-
-        cached_data = generated_cache[str_idx]
         subject = cached_data.get("subject", "")
         body = cached_data.get("body", "")
 

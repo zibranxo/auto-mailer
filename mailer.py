@@ -106,9 +106,9 @@ SMTP_RETRY_DELAY_S   = float(os.getenv("SMTP_RETRY_DELAY_S", "5"))
 
 SENDER_NAME          = os.getenv("SENDER_NAME", "Arnav")
 RATE_LIMIT_S         = float(os.getenv("RATE_LIMIT_SECONDS", "8"))
-GEN_MAX_TOKENS       = int(os.getenv("GEN_MAX_TOKENS", "420"))
-EMAIL_MAX_WORDS      = int(os.getenv("EMAIL_MAX_WORDS", "135"))
-EMAIL_MAX_SUBJECT_LEN = int(os.getenv("EMAIL_MAX_SUBJECT_LEN", "50"))
+GEN_MAX_TOKENS       = int(os.getenv("GEN_MAX_TOKENS", "1500"))
+EMAIL_MAX_WORDS      = int(os.getenv("EMAIL_MAX_WORDS", "400"))
+EMAIL_MAX_SUBJECT_LEN = int(os.getenv("EMAIL_MAX_SUBJECT_LEN", "100"))
 MIN_CONTACT_SCORE    = int(os.getenv("MIN_CONTACT_SCORE", "2"))
 MIN_QUALITY_SCORE    = int(os.getenv("MIN_QUALITY_SCORE", "70"))
 VARIANT_COUNT        = int(os.getenv("VARIANT_COUNT", "1"))
@@ -405,7 +405,7 @@ def mark_sent(sent: dict, email: str, company: str):
 # ── Generation cache helpers ──────────────────────────────────────────────────
 def _cache_key(company: dict, about_me: str) -> str:
     """Create a stable hash key for generation cache."""
-    raw = f"{company['Company']}:{company['Email']}:{company['Tag']}:{about_me[:200]}"
+    raw = f"{company['Company']}:{company['Email']}:{about_me[:200]}"
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
 
 
@@ -458,17 +458,18 @@ def check_api_health(client: OpenAI, model: str = None, timeout: float = 10) -> 
 
 
 # ── CSV loader ────────────────────────────────────────────────────────────────
-def load_companies(region_filter: str = None, tag_filter: str = None) -> list[dict]:
+def load_companies() -> list[dict]:
     if not CSV_FILE.exists():
         raise FileNotFoundError(f"CSV not found: {CSV_FILE}")
     rows = []
     with open(CSV_FILE, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            if region_filter and row["Region"].strip().lower() != region_filter.lower():
-                continue
-            if tag_filter and row["Tag"].strip().lower() != tag_filter.lower():
-                continue
-            rows.append(row)
+            # Clean keys/values
+            cleaned_row = {k.strip(): v.strip() for k, v in row.items() if k}
+            # Ensure name defaults to "Hiring Team" if empty
+            if not cleaned_row.get("Name"):
+                cleaned_row["Name"] = "Hiring Team"
+            rows.append(cleaned_row)
     return rows
 
 
@@ -730,9 +731,8 @@ def fetch_company_context(company_name: str, domain: str) -> str:
 
 
 def calculate_contact_score(company: dict, sent_log: dict = None) -> int:
-    """Calculate a contact score based on email quality, role relevance, and communications history (0-10)."""
+    """Calculate a contact score based on email validity and domain type (0-5)."""
     score = 0
-
     email = company["Email"].strip().lower()
 
     # Email format validity (2 points)
@@ -745,7 +745,6 @@ def calculate_contact_score(company: dict, sent_log: dict = None) -> int:
     domain_name = '.'.join(domain_parts[:-1]) if len(domain_parts) > 1 else email_domain
     tlds = domain_parts[-1:] if len(domain_parts) > 1 else []
     
-    # Corporate indicators
     corporate_tlds = {'co', 'org', 'gov', 'edu', 'ac'}
     corporate_keywords = {'company', 'corp', 'inc', 'ltd', 'llc'}
     generic_domains = {'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com'}
@@ -754,78 +753,41 @@ def calculate_contact_score(company: dict, sent_log: dict = None) -> int:
         any(tld in corporate_tlds for tld in tlds)):
         score += 2
     elif email_domain in generic_domains:
-        score += 0  # Generic domains get no bonus
+        score += 0
     else:
-        score += 1  # Other domains (possibly custom) get partial score
+        score += 1
 
-    # Communication history check (penalty of -1 point if recently contacted)
+    # Communication history check (1 point if not contacted, -1 if contacted)
     if sent_log and email in sent_log:
         score -= 1
-
-    # Role quality from Note field (3 points)
-    note = company.get("Note", "").lower()
-    # High-value roles
-    high_value_roles = ['hr', 'human resources', 'recruiter', 'recruitment', 'talent', 'hiring',
-                       'manager', 'lead', 'director', 'head', 'chief']
-    # Technical roles relevant for AI/ML
-    tech_roles = ['engineer', 'developer', 'technical', 'tech', 'ai', 'ml', 'data', 'science']
-
-    if any(role in note for role in high_value_roles):
-        score += 3
-    elif any(role in note for role in tech_roles):
-        score += 2
-    elif note:  # Has some note but not matching high-value patterns
+    else:
         score += 1
 
-    # Region preference bonus (1 point) - prioritizing local companies for internship
-    region = company.get("Region", "").lower()
-    if region == "india":  # Assuming user prefers India-based opportunities
-        score += 1
-
-    # Tag relevance bonus (2 points) - prioritizing AI/ML and related tags
-    tag = company.get("Tag", "").lower()
-    relevant_tags = ['ai/ml', 'ai', 'ml', 'artificial intelligence', 'machine learning',
-                    'data', 'analytics', 'research', 'technology', 'software']
-
-    if any(relevant_tag in tag for relevant_tag in relevant_tags):
-        score += 2
-    elif tag:  # Has some tag but not matching preferred ones
-        score += 1
-
-    # Ensure score is within bounds
-    return max(0, min(10, score))
+    return max(0, min(5, score))
 
 
 # ── NIM email generator ───────────────────────────────────────────────────────
 SYSTEM_PROMPT = """You are writing a cold job-application email on behalf of Arnav Sagar, a 2nd-year B.Tech Software Engineering student at Delhi Technological University (DTU), CGPA 8.75.
 
 ## Who Arnav Is
-Arnav is not a typical student applicant. He completed two research internships before the end of his first year — both producing real, deployed systems:
+Arnav is a highly capable student developer. He completed two research internships before the end of his first year — both producing real, deployed systems:
 - At AIMS-DTU: built a 3-stage LLM moderation pipeline (regex → semantic embeddings → fine-tuned DistilBERT + XGBoost) with sub-10ms filtering, served via FastAPI in production.
 - At 5G Lab, DoT DTU: built a sub-25ms P95 on-device vision inference pipeline using YOLOv8, CUDA, and a self-supervised trajectory autoencoder. Presented at PEC Chandigarh.
-His strongest projects (YTRAG, LLM Safety Shield, JAILS, ZeroFall+, CAF-OTSRNet) involve real engineering — not tutorials. He can cite concrete metrics: 0.9996 accuracy, +15.74% PSNR vs SOTA, 4× model compression.
+His strongest projects (CLASP, Regavis, YTRAG, LLM Safety Shield, JAILS, ZeroFall+, CAF-OTSRNet) involve real engineering — not tutorials. He can cite concrete metrics: 0.9996 accuracy, +15.74% PSNR vs SOTA, 4× model compression.
 
-## Email Structure (MANDATORY — 3 paragraphs)
-1. **HOOK** (1 sentence): Say something *specific* about the target company's product, technology, or mission. This must come from the company context provided. Be direct — not flattering.
-2. **VALUE PROP** (2 sentences max): Cite exactly 2 specific technical facts from Arnav's most relevant projects for this company's domain. Include at least one concrete metric. Do NOT summarise — be precise.
-3. **ASK** (1 sentence): A clear, confident request — offer to share more or schedule a short call.
+## Email Structure (MANDATORY — 4 paragraphs, do not include sign-off)
+The email must consist exactly of a salutation and four body paragraphs. Do NOT generate the sign-off block (like 'Thanks for your time, Arnav Sagar...'); this will be appended programmatically by Python code.
 
-Sign off with:
-Arnav Sagar | DTU 2nd Year | +91-6284962948 | arnavsagar1510@gmail.com
+1. **SALUTATION:** Start with "Hi [HR Name]," (or "Hi Hiring Team," if Name is not specified in the prompt).
+2. **PARAGRAPH 1 (INTRO & HOOK):** Open with an introduction (e.g., "I'm Arnav Sagar, a second-year Software Engineering student at Delhi Technological University, and I'm reaching out about AI/ML intern opportunities at [Company]."). Connect your interest directly to the target company's mission/product.
+3. **PARAGRAPH 2 & 3 (VALUE PROP):** Pitch 2-3 of your strongest matching projects from the candidate brief in a narrative style (not bullet points). Cite specific technical details and concrete metrics (e.g. rate-limiting, token-buckets, latency reductions, accuracy percentages) to show real engineering depth.
+4. **PARAGRAPH 4 (ASK):** Express specific interest in the scale/challenges of the company and make a clear request for a brief chat or opportunity to share more details.
 
 ## Hard Rules
-- **Max 135 words** in the body (not counting the sign-off line)
-- **No salutation** ("Hi", "Dear Hiring Team", "Hello" — skip all of them, go straight to the hook)
-- **Subject line**: Use the format already given in the user prompt — do NOT change it
-- **BANNED openers** (never start the email body with any of these):
-  - "I've been impressed by..."
-  - "I came across your..."
-  - "I hope this email/message finds you..."
-  - "I am writing to express my interest..."
-  - "I am a student at..."
-  - "As a [X]-year student..."
-- **BANNED filler phrases**: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit"
-- Do NOT open with Arnav's name or school — lead with the company hook.
+- **Word count:** Aim for 200–350 words in the body paragraphs.
+- **Subject line:** Create a compelling, professional, and specific subject line in the format: "2nd-Year DTU Engineer — [Specific Tech Detail/Project Hook]" (e.g., "2nd-Year DTU Engineer — Rate-Limiting a Multi-Provider LLM Proxy Across 18 APIs"). Do not make it generic or spammy.
+- **BANNED filler phrases**: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit", "demonstrate", "showcase"
+- Do NOT generate any sign-off text (no "Best regards", no name, no phone, no links). Just stop after Paragraph 4.
 
 ## Output Format
 Return ONLY valid JSON with exactly these keys:
@@ -1120,34 +1082,28 @@ def _fix_unterminated_strings(json_str: str) -> dict:
 
 
 # Template-based fallback if LLM completely fails
-EMAIL_TEMPLATE = """Subject: {subject}
+EMAIL_TEMPLATE = """Hi {name},
 
-Dear Hiring Team at {company},
+I hope this email finds you well. I am writing to express my strong interest in contributing as an AI/ML Engineering Intern at {company}.
 
-I hope this email finds you well. I am writing to express my strong interest in contributing as an AI/ML Engineering Intern.
+I am currently a 2nd-year BTech Software Engineering student at Delhi Technological University (DTU). I have already completed two research internships:
+• At AIMS-DTU, I built a 3-stage LLM moderation pipeline using DistilBERT + XGBoost with sub-10ms filtering.
+• At the 5G Lab (DTU), I developed edge AI threat detection models using YOLOv8.
 
-I am currently a 2nd-year BTech Software Engineering student at Delhi Technological University (DTU), and I have already completed two research internships:
+In addition to my internships, I have built several metric-driven engineering projects:
+• CLASP — a rate-limit-aware multi-provider LLM proxy with token-bucket limiting and an async priority queue (934 passing tests).
+• Regavis — a two-stage audio deepfake detection cascade (LFCC-LCNN + XLSR-53 + AASIST) with Indic speech bootstrapping.
+• YTRAG — a semantic retrieval YouTube chatbot leveraging FAISS, BM25, and RRF fusion.
 
-• At AIMS-DTU, I architected a 3-stage LLM safety pipeline using DistilBERT + XGBoost with sub-10ms filtering.
-• At the 5G Lab (Department of Telecommunications, DTU), I built real-time threat detection using YOLOv8 with edge AI deployment.
+I would love the opportunity to bring my hands-on experience in building robust, low-latency AI pipelines to the team at {company}. I have attached my resume for your review and would appreciate the chance to discuss how I can contribute to your goals.
 
-Beyond internships, I have independently built production-grade systems:
-• YTRAG — YouTube RAG chatbot with semantic retrieval and OpenAI embeddings
-• Multi-stage RAG pipeline over PDF corpora using FAISS + BM25 + cross-encoder reranking
-• LLM Safety Shield with adversarial normalization, Redis caching, and ONNX optimization
-• AI vs. Human Text Classifier achieving 0.9996 accuracy with RoBERTa on 200K samples
+GitHub: github.com/zibranxo
+Resume: attached
 
-My strongest areas: Applied AI / LLM systems, LLM safety and red-teaming, edge AI/on-device inference, multi-agent systems, and agentic AI workflows.
-
-I would love the opportunity to contribute to {company}. I have attached my resume for your review and would be grateful for the chance to discuss how I can add value to your team.
-
-Thank you for your time and consideration.
-
-Best regards,
+Thanks for your time,
 Arnav Sagar
 +91-6284962948
 arnavsagar1510@gmail.com
-linkedin.com/in/arnvsr | github.com/zibranxo
 """
 
 
@@ -1155,18 +1111,17 @@ linkedin.com/in/arnvsr | github.com/zibranxo
 # Maps a company's Tag field to the most relevant Arnav projects/internships.
 # Edit this as new projects are completed or priorities shift.
 DOMAIN_PROJECT_MAP: dict[str, list[str]] = {
-    "AI/ML":        ["AIMS-DTU internship", "LLM Safety Shield", "YTRAG", "JAILS"],
-    "NLP":          ["YTRAG", "AIMS-DTU internship", "JAILS", "LLM Safety Shield"],
-    "Conversational AI": ["YTRAG", "Vera Bot", "AIMS-DTU internship"],
-    "Fintech":      ["Vera Bot", "YTRAG", "AIMS-DTU internship"],
-    "Edtech":       ["YTRAG", "Retrieval Augmentation System", "AIMS-DTU internship"],
-    "Security":     ["ZeroFall+", "JAILS", "LLM Safety Shield", "AIMS-DTU internship"],
-    "Data":         ["AI vs Human classifier", "Retrieval Augmentation System", "YTRAG"],
-    "SaaS":         ["Vera Bot", "YTRAG", "LLM Safety Shield"],
+    "AI/ML":        ["CLASP", "AIMS-DTU internship", "Retrieval Augmentation System"],
+    "NLP":          ["YTRAG", "Retrieval Augmentation System", "AIMS-DTU internship"],
+    "Security":     ["Regavis deepfake detection", "JAILS", "LLM Safety Shield"],
+    "Fintech":      ["CLASP", "YTRAG", "AIMS-DTU internship"],
+    "Audio":        ["Regavis deepfake detection", "5G Lab internship"],
+    "Infrastructure": ["CLASP", "5G Lab internship", "ZeroFall+"],
+    "Vision/Aerospace": ["CAF-OTSRNet", "5G Lab internship"],
+    "Data":         ["Retrieval Augmentation System", "AI vs Human classifier", "YTRAG"],
+    "SaaS":         ["CLASP", "YTRAG", "LLM Safety Shield"],
     "5G/Telecom":   ["5G Lab internship", "ZeroFall+", "CAF-OTSRNet"],
-    "Healthcare":   ["AIMS-DTU internship", "LLM Safety Shield", "YTRAG"],
-    "E-commerce":   ["Vera Bot", "YTRAG", "JAILS"],
-    "default":      ["YTRAG", "LLM Safety Shield", "AIMS-DTU internship"],
+    "default":      ["CLASP", "AIMS-DTU internship", "Retrieval Augmentation System"],
 }
 
 # Maps project/internship names to a short, metric-rich description the LLM can cite.
@@ -1189,9 +1144,6 @@ PROJECT_BRIEFS: dict[str, str] = {
     "ZeroFall+":
         "Unified WAF + EDR pipeline with 6 autonomous agents — RoBERTa for anomaly detection, "
         "blockchain behavioural hashing for O(1) immutable threat memory, LoRA fine-tuning.",
-    "Vera Bot":
-        "Prompt-dispatch composer for merchant messaging with 4-context routing, post-LLM validator, "
-        "auto-reply detector (regex + repeat counter), and temperature=0 for deterministic outputs.",
     "AI vs Human classifier":
         "14-model benchmark on ~200K samples; RoBERTa fine-tune hit 0.9996 accuracy. "
         "GPU pipeline: 35 min → 6 min (5.8× speedup).",
@@ -1201,7 +1153,45 @@ PROJECT_BRIEFS: dict[str, str] = {
     "CAF-OTSRNet":
         "Triple-encoder cross-attention fusion for thermal super-resolution. "
         "PSNR +15.74%, SSIM +8.22% vs SOTA on ISRO dataset. National Finalist, Smart India Hackathon 2025.",
+    "CLASP":
+        "Built a rate-limit-aware multi-provider LLM proxy with token-bucket limiting across multi-key pools, "
+        "circuit breakers, and an async priority queue with SSE keep-alive absorption; two-tier LRU/SQLite/FAISS cache; 934 passing tests.",
+    "Regavis deepfake detection":
+        "Designed a two-stage audio deepfake detection cascade — LFCC-LCNN for fast first-pass screening, "
+        "frozen XLSR-53 + AASIST for high-precision second-stage verification — with a Hindi/Indic data bootstrapping strategy for underrepresented accents."
 }
+
+
+def infer_company_tag(company_context: str) -> str:
+    """Infer the most relevant company tag based on scraped context keywords."""
+    if not company_context:
+        return "default"
+    
+    ctx_lower = company_context.lower()
+    
+    # Category keyword mapping
+    keyword_map = {
+        "Fintech": {"bank", "payment", "lending", "fraud", "credit", "finance", "fintech", "transaction", "wealth"},
+        "Security": {"security", "cyber", "threat", "vulnerability", "breach", "firewall", "safety", "defense", "hack", "penetration", "exploit", "leakage"},
+        "Audio": {"audio", "voice", "speech", "call", "deepfake", "acoustic", "sound", "dsp"},
+        "Vision/Aerospace": {"vision", "satellite", "isro", "aerospace", "image", "thermal", "yolo", "opencv", "camera", "deformable"},
+        "5G/Telecom": {"5g", "telecom", "cellular", "telecommunications", "edge", "latency", "mec", "network"},
+        "AI/ML": {"llm", "rag", "nlp", "chatbot", "generative", "model", "inference", "prompt", "train", "embeddings", "classification"}
+    }
+    
+    best_tag = "default"
+    max_matches = 0
+    
+    # Split context into clean lowercase tokens
+    tokens = set(re.findall(r'[a-z0-9]+', ctx_lower))
+    
+    for tag, keywords in keyword_map.items():
+        matches = len(tokens & keywords)
+        if matches > max_matches:
+            max_matches = matches
+            best_tag = tag
+            
+    return best_tag
 
 
 def build_candidate_context(about_me: str, company_tag: str) -> str:
@@ -1274,19 +1264,12 @@ def generate_email(
     company_context: str = "",
 ) -> dict:
     co_name    = company["Company"]
-    co_tag     = company.get("Tag", "")
-    co_region  = company.get("Region", "")
-    co_note    = company.get("Note", "")
+    co_tag     = company.get("Tag", "") or infer_company_tag(company_context)
     co_email   = company["Email"]
+    co_hr_name = company.get("Name", "Hiring Team")
 
     # Build curated candidate context (domain-aware, ~250 tokens vs 7,600 bytes raw)
     candidate_ctx = build_candidate_context(about_me, co_tag)
-
-    # Determine contact role hint for personalisation
-    contact_hint = f"Contact: {co_note}" if co_note else "Contact: Hiring / Recruiting team"
-
-    # Build subject line (fixed format per instructions in about_me.md)
-    subject_line = "Internship Application - Arnav Sagar (DTU) - AI/ML"
 
     user_prompt = f"""## Your Task
 Write a cold job-application email on behalf of Arnav Sagar for the company below.
@@ -1301,8 +1284,7 @@ Use the candidate brief and company context to make it specific and metric-groun
 ## Target Company
 - Name: {co_name}
 - Industry / Domain: {co_tag}
-- Region: {co_region}
-- {contact_hint}
+- Contact: {co_hr_name}
 """
 
     if company_context:
@@ -1320,15 +1302,15 @@ No website context available — use your knowledge of {co_name} if known, other
 ---
 
 ## Output Requirements
-- Subject must be exactly: "{subject_line}"
-- Body structure (3 paragraphs, no salutation, each paragraph on its own line separated by a blank line):
-  1. HOOK (1 sentence): A direct, specific observation about {co_name}'s product/tech/mission using the company context. Must reference something concrete from the context above.
-  2. VALUE PROP (2 sentences): Pick 2 projects from the candidate brief. Write in first person — e.g. "At AIMS-DTU, I built ... achieving sub-10ms latency. I also built YTRAG, a full RAG pipeline achieving TOP_K=3 cosine retrieval." Include at least 1 concrete metric per project.
-  3. ASK (1 sentence in first person): e.g. "I'd love to share more details or have a short call if you're open to it."
-- **MANDATORY last line of body** (copy exactly): "Arnav Sagar | DTU 2nd Year | +91-6284962948 | arnavsagar1510@gmail.com"
-- Max 135 words in body (before the sign-off line). Count carefully.
-- BANNED openers: any sentence starting with "I've", "I came", "I hope", "I am writing", "I am a", "As a", "Dear", "Hi", "Hello"
-- BANNED phrases anywhere in body: "demonstrate", "showcase", "passionate", "excited", "believe I can", "feel I would"
+- Subject line: Create a compelling, professional, and specific subject line in the format: "2nd-Year DTU Engineer — [Specific Tech Detail/Project Hook]" (e.g., "2nd-Year DTU Engineer — Rate-Limiting a Multi-Provider LLM Proxy Across 18 APIs"). Do not make it generic or spammy.
+- Body structure (4 body paragraphs exactly, no sign-off block):
+  1. SALUTATION: Start exactly with "Hi {co_hr_name},"
+  2. PARAGRAPH 1 (INTRO & HOOK): Open with an introduction (e.g., "I'm Arnav Sagar, a second-year Software Engineering student at Delhi Technological University, and I'm reaching out about AI/ML intern opportunities at {co_name}."). Connect your interest directly to the target company's mission/product.
+  3. PARAGRAPH 2 & 3 (VALUE PROP): Pitch 2-3 of your strongest matching projects from the candidate brief in a narrative style (not bullet points). Cite specific technical details and concrete metrics (e.g. rate-limiting, token-buckets, latency reductions, accuracy percentages) to show real engineering depth.
+  4. PARAGRAPH 4 (ASK): Express specific interest in the scale/challenges of the company and make a clear request for a brief chat or opportunity to discuss further.
+- Word count: Aim for 200–350 words in the body paragraphs.
+- BANNED filler phrases: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit", "demonstrate", "showcase"
+- Do NOT generate any sign-off block or contact details (e.g. "Thanks for your time", your name, email, phone, links) at the end. Just stop after paragraph 4.
 
 Return ONLY: {{"subject": "...", "body": "..."}}
 """
@@ -1389,13 +1371,25 @@ Return ONLY: {{"subject": "...", "body": "..."}}
             raise ValueError("Model returned empty content (reasoning consumed tokens before final answer)")
         raise ValueError("Model returned empty content")
 
-    return _parse_email_json(raw)
+    parsed = _parse_email_json(raw)
+    
+    # Programmatically append the fixed sign-off block
+    sign_off = (
+        "\n\nGitHub: github.com/zibranxo\n"
+        "Resume: attached\n\n"
+        "Thanks for your time,\n"
+        "Arnav Sagar\n"
+        "+91-6284962948"
+    )
+    parsed["body"] = parsed["body"].strip() + sign_off
+    return parsed
 
 
 def _template_fallback_email(company: dict) -> dict:
     """Return a template-based email when LLM generation completely fails."""
     subject = "Internship Application — Arnav Sagar (DTU) — AI/ML Engineering"
-    body = EMAIL_TEMPLATE.format(subject=subject, company=company["Company"])
+    name = company.get("Name", "") or "Hiring Team"
+    body = EMAIL_TEMPLATE.format(name=name, company=company["Company"])
     log.warning(f"  {company['Company']}: Using template fallback (LLM generation failed)")
     return {"subject": subject, "body": body, "template": True}
 
@@ -1525,31 +1519,43 @@ def generate_email_with_retry(
 LOW_QUALITY_QUEUE: Path = None  # Set to RUN_DIR / "low_quality_queue.json" in main
 
 
-def calculate_quality_score(subject: str, body: str, company: dict) -> int:
+def calculate_quality_score(subject: str, body: str, company: dict, company_context: str = "") -> int:
     """Calculate pre-send quality gate score (0-100) for a generated email."""
     score = 0
     body_lower = body.lower()
-    
-    # 1. Conciseness (15 points)
     words = body.split()
-    if len(words) <= EMAIL_MAX_WORDS:
-        score += 10
+    
+    # 1. Subject length and Word count sanity (10 points total)
     if len(subject) <= EMAIL_MAX_SUBJECT_LEN:
         score += 5
+    if 50 <= len(words) <= 500:
+        score += 5
         
-    # 2. Relevance (30 points)
+    # 2. Relevance (35 points total)
     co_name = company.get("Company", "").lower()
-    co_tag = company.get("Tag", "").lower()
-    co_note = company.get("Note", "").lower()
-    
     if co_name and co_name in body_lower:
-        score += 15
-    if (co_tag and co_tag in body_lower) or (co_note and any(w in body_lower for w in co_note.split() if len(w) > 3)):
+        score += 20
+        
+    # Match keywords from scraped company context
+    context_matched = False
+    if company_context:
+        # Clean and tokenize company context
+        context_tokens = set(re.findall(r'[a-z]{4,}', company_context.lower()))
+        # Exclude very common words
+        stopwords = {"about", "other", "their", "there", "would", "could", "should", "these", "those", "which", "where", "while", "during", "under", "above", "through", "company", "services", "solutions", "technology", "platform", "systems", "products"}
+        meaningful_tokens = context_tokens - stopwords
+        if meaningful_tokens:
+            if any(token in body_lower for token in meaningful_tokens):
+                context_matched = True
+    elif co_name: # Fallback for testing when context is not provided
+        context_matched = True
+        
+    if context_matched:
         score += 15
         
     # 3. Personalization (25 points)
-    # Common keywords from about_me that match DTU BTech profile
-    keywords = ["llm", "rag", "safety", "threat", "classification", "yolo", "safety shield", "bert", "roberta", "xgboost", "faiss"]
+    # Common keywords from about_me that match DTU BTech profile (including CLASP & Regavis)
+    keywords = ["llm", "rag", "safety", "threat", "classification", "yolo", "safety shield", "bert", "roberta", "xgboost", "faiss", "proxy", "deepfake", "verification", "accents", "latency"]
     matched_keywords = [kw for kw in keywords if kw in body_lower]
     if matched_keywords:
         score += 25
@@ -1617,7 +1623,7 @@ def generate_and_gate_email(
         if result.get("template"):
             return result
             
-        score = calculate_quality_score(result["subject"], result["body"], company)
+        score = calculate_quality_score(result["subject"], result["body"], company, company_context=company_context)
         result["quality_score"] = score
         
         if score >= min_quality_score:
@@ -1635,7 +1641,7 @@ def generate_and_gate_email(
                     backoff_base, var_temp, top_p, thinking, reasoning_effort, company_context
                 )
                 if not res.get("template"):
-                    sc = calculate_quality_score(res["subject"], res["body"], company)
+                    sc = calculate_quality_score(res["subject"], res["body"], company, company_context=company_context)
                     res["quality_score"] = sc
                     return res
             except Exception:
@@ -1677,7 +1683,7 @@ def generate_and_gate_email(
             reasoning_effort="none",
             company_context=company_context,
         )
-        strict_score = calculate_quality_score(strict_result["subject"], strict_result["body"], company)
+        strict_score = calculate_quality_score(strict_result["subject"], strict_result["body"], company, company_context=company_context)
         strict_result["quality_score"] = strict_score
         
         if strict_score >= min_quality_score:
@@ -1777,8 +1783,6 @@ def generate_run_report(stats: dict, failures: list, emails_attempted: list, arg
         "config": {
             "dry_run": args.dry_run,
             "limit": args.limit,
-            "filter_region": args.filter_region,
-            "filter_tag": args.filter_tag,
             "workers": args.workers,
             "min_contact_score": args.min_contact_score,
             "min_quality_score": args.min_quality_score
@@ -1811,8 +1815,6 @@ def generate_run_report(stats: dict, failures: list, emails_attempted: list, arg
 ## Parameters
 - **Dry Run**: {args.dry_run}
 - **Limit**: {args.limit}
-- **Region Filter**: {args.filter_region}
-- **Tag Filter**: {args.filter_tag}
 - **Min Contact Score**: {args.min_contact_score}
 - **Min Quality Score**: {args.min_quality_score}
 
@@ -1882,10 +1884,7 @@ def main():
                         help="Generate and preview emails without sending")
     parser.add_argument("--limit",          type=int,  default=None,
                         help="Max number of companies to process")
-    parser.add_argument("--filter-region",  type=str,  default=None,
-                        help="Filter by region: India | Global")
-    parser.add_argument("--filter-tag",     type=str,  default=None,
-                        help="Filter by tag: AI/ML | Fintech | Data | etc.")
+
     parser.add_argument("--skip-sent",      action="store_true", default=True,
                         help="Skip companies already emailed (default: on)")
     parser.add_argument("--no-skip-sent",   action="store_false", dest="skip_sent",
@@ -2057,7 +2056,7 @@ def main():
 
     # ── Load data ─────────────────────────────────────────────────────────────
     about_me  = load_about_me()
-    companies = load_companies(args.filter_region, args.filter_tag)
+    companies = load_companies()
 
     # ── Validate emails and remove duplicates ─────────────────────────────────────
     valid_companies = []
