@@ -84,47 +84,71 @@ LOG_FILE: Path = None
 CHECKPOINT_FILE: Path = None
 STATUS_LOG: Path = None
 
+_company_cache = {}
+_company_cache_lock = threading.Lock()
+
+
+def _get_env_int(key: str, default: int) -> int:
+    val = os.getenv(key)
+    if val is None or not val.strip():
+        return default
+    try:
+        return int(val.strip())
+    except ValueError:
+        return default
+
+def _get_env_float(key: str, default: float) -> float:
+    val = os.getenv(key)
+    if val is None or not val.strip():
+        return default
+    try:
+        return float(val.strip())
+    except ValueError:
+        return default
+
 
 # ── Config from .env ──────────────────────────────────────────────────────────────────
 LLM_API_KEY          = os.getenv("LLM_API_KEY")
 LLM_BASE_URL         = os.getenv("LLM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-LLM_MODEL            = os.getenv("LLM_MODEL", "meta/llama-3.3-70b-instruct")
-LLM_FALLBACK_MODEL   = os.getenv("LLM_FALLBACK_MODEL", "deepseek-ai/deepseek-v4-flash")
-LLM_TEMPERATURE      = float(os.getenv("LLM_TEMPERATURE", "0.2"))
-LLM_TOP_P            = float(os.getenv("LLM_TOP_P", "0.95"))
-LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "low").strip().lower()
-LLM_TIMEOUT_S        = float(os.getenv("LLM_TIMEOUT_S", "45"))
-LLM_RETRIES          = int(os.getenv("LLM_RETRIES", "2"))
-LLM_BACKOFF_S        = float(os.getenv("LLM_BACKOFF_S", "1.5"))
-LLM_MAX_BACKOFF_S    = float(os.getenv("LLM_MAX_BACKOFF_S", "30"))
-LLM_QUARANTINE_S     = float(os.getenv("LLM_QUARANTINE_S", "600"))
+model_val            = os.getenv("LLM_MODEL")
+LLM_MODEL            = model_val.strip() if model_val and model_val.strip() else "default"
+fallback_val         = os.getenv("LLM_FALLBACK_MODEL")
+LLM_FALLBACK_MODEL   = fallback_val.strip() if fallback_val and fallback_val.strip() else "default"
+LLM_TEMPERATURE      = _get_env_float("LLM_TEMPERATURE", 0.2)
+LLM_TOP_P            = _get_env_float("LLM_TOP_P", 0.95)
+LLM_REASONING_EFFORT = (os.getenv("LLM_REASONING_EFFORT") or "low").strip().lower()
+LLM_TIMEOUT_S        = _get_env_float("LLM_TIMEOUT_S", 45.0)
+LLM_RETRIES          = _get_env_int("LLM_RETRIES", 2)
+LLM_BACKOFF_S        = _get_env_float("LLM_BACKOFF_S", 1.5)
+LLM_MAX_BACKOFF_S    = _get_env_float("LLM_MAX_BACKOFF_S", 30.0)
+LLM_QUARANTINE_S     = _get_env_float("LLM_QUARANTINE_S", 600.0)
 
 SMTP_HOST            = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT            = int(os.getenv("SMTP_PORT", "587"))
-SMTP_MAX_RETRIES     = int(os.getenv("SMTP_MAX_RETRIES", "2"))
-SMTP_RETRY_DELAY_S   = float(os.getenv("SMTP_RETRY_DELAY_S", "5"))
+SMTP_PORT            = _get_env_int("SMTP_PORT", 587)
+SMTP_MAX_RETRIES     = _get_env_int("SMTP_MAX_RETRIES", 2)
+SMTP_RETRY_DELAY_S   = _get_env_float("SMTP_RETRY_DELAY_S", 5.0)
 
 SENDER_NAME          = os.getenv("SENDER_NAME", "Arnav")
-RATE_LIMIT_S         = float(os.getenv("RATE_LIMIT_SECONDS", "8"))
-GEN_MAX_TOKENS       = int(os.getenv("GEN_MAX_TOKENS", "1500"))
-EMAIL_MAX_WORDS      = int(os.getenv("EMAIL_MAX_WORDS", "400"))
-EMAIL_MAX_SUBJECT_LEN = int(os.getenv("EMAIL_MAX_SUBJECT_LEN", "100"))
-MIN_CONTACT_SCORE    = int(os.getenv("MIN_CONTACT_SCORE", "2"))
-MIN_QUALITY_SCORE    = int(os.getenv("MIN_QUALITY_SCORE", "70"))
-VARIANT_COUNT        = int(os.getenv("VARIANT_COUNT", "1"))
-COMPANY_CONTEXT_MAX_CHARS = int(os.getenv("COMPANY_CONTEXT_MAX_CHARS", "800"))
+RATE_LIMIT_S         = _get_env_float("RATE_LIMIT_SECONDS", 8.0)
+GEN_MAX_TOKENS       = _get_env_int("GEN_MAX_TOKENS", 1500)
+EMAIL_MAX_WORDS      = _get_env_int("EMAIL_MAX_WORDS", 400)
+EMAIL_MAX_SUBJECT_LEN = _get_env_int("EMAIL_MAX_SUBJECT_LEN", 100)
+MIN_CONTACT_SCORE    = _get_env_int("MIN_CONTACT_SCORE", 2)
+MIN_QUALITY_SCORE    = _get_env_int("MIN_QUALITY_SCORE", 70)
+VARIANT_COUNT        = _get_env_int("VARIANT_COUNT", 1)
+COMPANY_CONTEXT_MAX_CHARS = _get_env_int("COMPANY_CONTEXT_MAX_CHARS", 800)
 
 # SMTP connection pooling (from env)
-_SMTP_CONNECTION_MAX_AGE  = int(os.getenv("SMTP_CONN_MAX_AGE_S", "300"))
-_SMTP_CONNECTION_MAX_USES = int(os.getenv("SMTP_CONN_MAX_USES", "50"))
+_SMTP_CONNECTION_MAX_AGE  = _get_env_int("SMTP_CONN_MAX_AGE_S", 300)
+_SMTP_CONNECTION_MAX_USES = _get_env_int("SMTP_CONN_MAX_USES", 50)
 
 # Adaptive rate limiting (from env)
 _base_delay               = RATE_LIMIT_S
 _current_delay            = RATE_LIMIT_S
-_max_delay                = float(os.getenv("RATE_LIMIT_MAX_DELAY_S", "60"))
-_delay_multiplier         = float(os.getenv("RATE_LIMIT_DELAY_MULTIPLIER", "1.5"))
-_delay_decay_factor       = float(os.getenv("RATE_LIMIT_DECAY_FACTOR", "0.9"))
-_rate_success_threshold   = int(os.getenv("RATE_LIMIT_SUCCESS_THRESHOLD", "5"))
+_max_delay                = _get_env_float("RATE_LIMIT_MAX_DELAY_S", 60.0)
+_delay_multiplier         = _get_env_float("RATE_LIMIT_DELAY_MULTIPLIER", 1.5)
+_delay_decay_factor       = _get_env_float("RATE_LIMIT_DECAY_FACTOR", 0.9)
+_rate_success_threshold   = _get_env_int("RATE_LIMIT_SUCCESS_THRESHOLD", 5)
 _consecutive_successes    = 0
 _consecutive_errors       = 0
 
@@ -658,15 +682,9 @@ def _ddg_company_snippet(company_name: str, domain: str) -> str:
 
 def fetch_company_context(company_name: str, domain: str) -> str:
     """Fetch rich company context: homepage + /about + /careers, with OG tags and DDG fallback."""
-    if COMPANY_CACHE.exists():
-        try:
-            cache = json.loads(COMPANY_CACHE.read_text())
-            if domain in cache and cache[domain]:
-                return cache[domain]
-        except Exception:
-            cache = {}
-    else:
-        cache = {}
+    with _company_cache_lock:
+        if domain in _company_cache:
+            return _company_cache[domain]
 
     log.info(f"  Fetching web context for {company_name} from {domain}...")
 
@@ -699,8 +717,12 @@ def fetch_company_context(company_name: str, domain: str) -> str:
             collected.append(f"[Search snippet] {ddg}")
 
     if not collected:
-        cache[domain] = ""
-        COMPANY_CACHE.write_text(json.dumps(cache, indent=2))
+        with _company_cache_lock:
+            _company_cache[domain] = ""
+            try:
+                _atomic_write(COMPANY_CACHE, json.dumps(_company_cache, indent=2))
+            except Exception as e:
+                log.debug(f"Failed to save company context cache: {e}")
         return ""
 
     # Assemble context, capped to env-configured max chars
@@ -719,11 +741,12 @@ def fetch_company_context(company_name: str, domain: str) -> str:
     for pattern in injection_patterns:
         context = re.sub(pattern, '[redacted]', context, flags=re.IGNORECASE)
 
-    cache[domain] = context
-    try:
-        COMPANY_CACHE.write_text(json.dumps(cache, indent=2))
-    except Exception as e:
-        log.debug(f"Failed to save company context cache: {e}")
+    with _company_cache_lock:
+        _company_cache[domain] = context
+        try:
+            _atomic_write(COMPANY_CACHE, json.dumps(_company_cache, indent=2))
+        except Exception as e:
+            log.debug(f"Failed to save company context cache: {e}")
 
     return context
 
@@ -1359,7 +1382,7 @@ Return ONLY: {{"subject": "...", "body": "..."}}
             can_retry_without_flags = True
 
         if can_retry_without_flags:
-            response = client.chat.completions.create(**request)
+            response = provider.client.chat.completions.create(**request)
         else:
             raise
 
@@ -1950,7 +1973,7 @@ def main():
 
     # ── Setup Run Environment ─────────────────────────────────────────────────
     global RUN_DIR, LOG_FILE, CHECKPOINT_FILE, STATUS_LOG, LOW_QUALITY_QUEUE
-    global CSV_FILE, SENT_LOG, BOUNCED_LOG, COMPANY_CACHE, GEN_CACHE
+    global CSV_FILE, SENT_LOG, BOUNCED_LOG, COMPANY_CACHE, GEN_CACHE, _company_cache, log
 
     if args.folder:
         folder_dir = Path(args.folder.strip())
@@ -1972,6 +1995,16 @@ def main():
         runs_base = folder_dir / "runs"
     else:
         runs_base = BASE_DIR / "runs"
+
+    if COMPANY_CACHE.exists():
+        try:
+            _company_cache = json.loads(COMPANY_CACHE.read_text(encoding="utf-8"))
+            log.info(f"Loaded {len(_company_cache)} cached company contexts from {COMPANY_CACHE.name}")
+        except Exception as e:
+            log.warning(f"Failed to load company cache: {e}")
+            _company_cache = {}
+    else:
+        _company_cache = {}
 
     runs_base.mkdir(exist_ok=True)
 
@@ -2025,7 +2058,6 @@ def main():
         logging.getLogger(_noisy).setLevel(logging.WARNING)
 
     # Rebind module logger
-    global log
     log = logging.getLogger(__name__)
 
     log.info(f"Using run directory: [bold]{RUN_DIR}[/]")
@@ -2089,12 +2121,20 @@ def main():
     duplicate_email_count = 0
 
     for company in companies:
-        email = company["Email"].strip().lower()
+        raw_email = company["Email"].strip().lower()
+
+        # Try to extract the first valid email address from the field (handles multiple emails / notes)
+        match = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", raw_email)
+        if match:
+            email = match.group(0)
+            company["Email"] = email
+        else:
+            email = raw_email
 
         # Validate email format
         if not is_valid_email(email):
             invalid_email_count += 1
-            log.warning(f"Invalid email format, skipping: {company['Company']} -> {email}")
+            log.warning(f"Invalid email format, skipping: {company['Company']} -> {raw_email}")
             continue
             
         domain = email.split("@")[1]
