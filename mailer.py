@@ -1812,28 +1812,78 @@ def print_send_status(co_name: str, to_addr: str, sent_ok: bool, dry_run: bool):
 
 
 def print_summary(success_count: int, fail_count: int, stats: dict, dry_run: bool,
-                  run_dir: Path, report_path: str = ""):
-    """Minimal final summary."""
+                  run_dir: Path, report_path: str = "", failures: list = None, args = None):
+    """Print a highly styled, detailed run summary using Rich."""
     console.print()
-    console.print(f"  [bold white]Run complete[/]")
-    
-    if dry_run:
-        console.print("  [dim]Dry run — no emails were actually sent.[/]")
-        
-    console.print(f"  [dim]Sent:[/]      [white]{stats.get('send_success', success_count)}[/]")
-    if fail_count > 0:
-        console.print(f"  [dim]Failed:[/]    [red]{stats.get('send_failed', fail_count)}[/]")
-    if stats.get('skipped_sent', 0) > 0:
-        console.print(f"  [dim]Skipped:[/]   [white]{stats.get('skipped_sent', 0)}[/]")
-        
-    console.print(f"  [dim]Generated:[/] [white]{stats.get('generation_success', 0)}[/]")
-    
-    console.print()
-    console.print(f"  [dim]dir:[/] {run_dir}")
-    if report_path:
-        console.print(f"  [dim]report:[/] {report_path}")
+    console.print(Rule("[bold cyan]Mailing Run Summary[/bold cyan]"))
     console.print()
 
+    # Create statistics table
+    table = Table(title="Run Statistics", show_header=True, header_style="bold magenta", box=box.ROUNDED, expand=False)
+    table.add_column("Metric", style="white", width=32)
+    table.add_column("Count", justify="right", style="cyan", width=12)
+    table.add_column("Status / Note", style="dim italic")
+
+    total = stats.get("total_processed", 0)
+    sent = stats.get("send_success", success_count)
+    failed_send = stats.get("send_failed", fail_count)
+    skipped_sent = stats.get("skipped_sent", 0)
+    skipped_low_score = stats.get("skipped_low_score", 0)
+    skipped_invalid = stats.get("skipped_invalid_email", 0)
+    skipped_dup = stats.get("skipped_duplicate_email", 0)
+    gen_success = stats.get("generation_success", 0)
+    gen_failed = stats.get("generation_failed", 0)
+
+    table.add_row("Total Companies Loaded", f"[bold white]{total}[/]", "Total database targets")
+    
+    # Send status
+    send_status_color = "bold green" if sent > 0 else "white"
+    table.add_row("Emails Sent Successfully", f"[{send_status_color}]{sent}[/]", "Delivered to SMTP server" if not dry_run else "Dry-run simulated delivery")
+    
+    if failed_send > 0:
+        table.add_row("SMTP Send Failures", f"[bold red]{failed_send}[/]", "Errors during delivery")
+    else:
+        table.add_row("SMTP Send Failures", "[dim]0[/]", "No delivery failures")
+        
+    # Skipped
+    if skipped_sent > 0:
+        table.add_row("Skipped (Already Sent)", f"[yellow]{skipped_sent}[/]", "Skipped using sent_log.json")
+    if skipped_low_score > 0:
+        min_score = args.min_contact_score if args else 2
+        table.add_row("Skipped (Low Contact Score)", f"[dim]{skipped_low_score}[/]", f"Contact score < {min_score}")
+    if skipped_invalid > 0:
+        table.add_row("Skipped (Invalid Email)", f"[red]{skipped_invalid}[/]", "Invalid format in CSV")
+    if skipped_dup > 0:
+        table.add_row("Skipped (Duplicate Email)", f"[dim]{skipped_dup}[/]", "Duplicate email address in CSV")
+        
+    # Generation stats
+    table.add_row("Drafts Generated Successfully", f"[white]{gen_success}[/]", "LLM variants accepted")
+    if gen_failed > 0:
+        table.add_row("LLM Generation Failures", f"[bold red]{gen_failed}[/]", "Failed quality gate or API error")
+
+    console.print(table)
+    console.print()
+
+    # Show failures list if any
+    if failures:
+        console.print("[bold red]Failures Breakdown:[/bold red]")
+        fail_table = Table(show_header=True, header_style="bold red", box=box.ROUNDED)
+        fail_table.add_column("Company", style="bold white")
+        fail_table.add_column("Email", style="dim")
+        fail_table.add_column("Stage", style="yellow")
+        fail_table.add_column("Error Message", style="red")
+        
+        for fail in failures:
+            fail_table.add_row(fail.get("company", "Unknown"), fail.get("email", "Unknown"), fail.get("stage", "Unknown"), fail.get("error_message", "Unknown"))
+        console.print(fail_table)
+        console.print()
+
+    if dry_run:
+        console.print("  [bold yellow]Dry Run Mode — No emails were actually transmitted.[/]")
+    console.print(f"  [dim]Run Directory:[/] [white]{run_dir}[/]")
+    if report_path:
+        console.print(f"  [dim]Detailed Report:[/] [cyan]{report_path}[/]")
+    console.print()
 
 
 def generate_run_report(stats: dict, failures: list, emails_attempted: list, args):
@@ -1911,6 +1961,8 @@ def generate_run_report(stats: dict, failures: list, emails_attempted: list, arg
         log.info(f"Markdown summary report written to {summary_filename}")
     except Exception as e:
         log.error(f"Failed to write Markdown summary report: {e}")
+
+    return report_filename, summary_filename
 
 
 def load_checkpoint() -> Optional[dict]:
@@ -2479,7 +2531,7 @@ def main():
             time.sleep(RATE_LIMIT_S)
 
     # Generate run reports
-    generate_run_report(stats, failures, emails_attempted, args)
+    report_json_path, report_md_path = generate_run_report(stats, failures, emails_attempted, args)
     
     # ── Final summary ─────────────────────────────────────────────────────────
     print_summary(
@@ -2488,7 +2540,9 @@ def main():
         stats=stats,
         dry_run=args.dry_run,
         run_dir=RUN_DIR,
-        report_path=str(RUN_DIR / "run_report_*.md")  # Will be exact path in real use
+        report_path=str(report_md_path),
+        failures=failures,
+        args=args
     )
 
     log.info("Checkpoint retained securely.")
