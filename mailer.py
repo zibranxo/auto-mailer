@@ -87,6 +87,42 @@ STATUS_LOG: Path = None
 _company_cache = {}
 _company_cache_lock = threading.Lock()
 
+PRESET_SUBJECTS = [
+    "Software Engineering Internship Application — DTU '28",
+    "SDE Intern Application — B.Tech Software Engineering, DTU",
+    "Internship Inquiry: Software Development Role",
+    "Application for Software Engineer Intern Position",
+    "SDE Internship — Second-Year Engineering Student, DTU",
+    "Software Engineering Intern — CGPA 8.75, Available for Internship",
+    "Internship Application: Backend/Systems Development",
+    "SDE Intern Inquiry — Production Systems Experience",
+    "Software Development Internship — DTU Sophomore",
+    "Application for SDE Internship — System Design & Backend Focus",
+    "Internship Application: Software Engineer, DTU '28",
+    "SDE Intern — Hackathon Finalist Seeking Internship Opportunity",
+    "Software Engineering Internship — Available Summer/Off-Cycle",
+    "Internship Application: Full-Stack Development Role",
+    "SDE Intern Application — National Hackathon Finalist (SIH 2025)",
+    "Software Development Internship Inquiry — DTU Student",
+    "Application for Software Engineering Internship — Immediate Availability",
+    "SDE Intern — System Design, APIs, and Backend Infrastructure",
+    "Internship Application: Software Engineer Role, DTU",
+    "Software Engineering Internship — Strong Academic + Project Record",
+    "Application for SDE Internship — Coordinator, Business Bulls DTU",
+    "SDE Intern Inquiry — Distributed Systems & Backend Projects",
+    "Internship Application: Software Developer, 2028 Graduate",
+    "Software Engineering Internship — Open to Remote/On-site",
+    "SDE Intern Application — Systems & Infrastructure Focus",
+]
+
+
+def get_preset_subject(email_addr: str) -> str:
+    h = int(hashlib.md5(email_addr.lower().strip().encode('utf-8')).hexdigest(), 16)
+    return PRESET_SUBJECTS[h % len(PRESET_SUBJECTS)]
+
+
+OVERRIDE_WITH_PRESET_SUBJECTS = True
+
 
 def _get_env_int(key: str, default: int) -> int:
     val = os.getenv(key)
@@ -1396,6 +1432,10 @@ Return ONLY: {{"subject": "...", "body": "..."}}
 
     parsed = _parse_email_json(raw)
     
+    # Override subject with professional preset
+    if OVERRIDE_WITH_PRESET_SUBJECTS:
+        parsed["subject"] = get_preset_subject(co_email)
+    
     # Programmatically append the fixed sign-off block
     sign_off = (
         "\n\nGitHub: github.com/zibranxo\n"
@@ -1410,7 +1450,10 @@ Return ONLY: {{"subject": "...", "body": "..."}}
 
 def _template_fallback_email(company: dict) -> dict:
     """Return a template-based email when LLM generation completely fails."""
-    subject = "Internship Application — Arnav Sagar (DTU) — AI/ML Engineering"
+    if OVERRIDE_WITH_PRESET_SUBJECTS:
+        subject = get_preset_subject(company["Email"])
+    else:
+        subject = "Internship Application — Arnav Sagar (DTU) — AI/ML Engineering"
     name = company.get("Name", "") or "Hiring Team"
     body = EMAIL_TEMPLATE.format(name=name, company=company["Company"])
     log.warning(f"  {company['Company']}: Using template fallback (LLM generation failed)")
