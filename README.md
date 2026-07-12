@@ -226,5 +226,5 @@ auto-mailer/
 
 <div align="center">
   <p><i>Ensure compliance with CAN-SPAM, GDPR, or applicable local outreach regulations when utilizing automated email sequences.</i></p>
-  <p>Built with ❤️ for intelligent automation.</p>
+  <p>Built with ❤️ for intelligent automation by Aranv Sagar.</p>
 </div>
