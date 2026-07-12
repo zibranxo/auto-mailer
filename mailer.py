@@ -2247,7 +2247,7 @@ def main():
     stats["total_processed"] = len(companies)
 
     generated = {}
-    if args.resume:
+    if args.resume is not None:
         checkpoint = load_checkpoint()
         if checkpoint:
             generated = checkpoint.get("generated_cache_by_email", {})
