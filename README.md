@@ -41,7 +41,7 @@ graph TD
 | Component | Legacy Code (v1.0) | Upgraded Code (v2.0) | Rationale |
 | :--- | :--- | :--- | :--- |
 | **Token Budget** | `GEN_MAX_TOKENS = 420` | `GEN_MAX_TOKENS = 1500` | Fixes mid-generation truncation crash |
-| **Subject Lines** | Hardcoded static string variable | Dynamically generated from company context | Improves open rates and personalization |
+| **Subject Lines** | Hardcoded static string variable | Curated professional preset subjects (deterministic mapping) | Prevents generic or cringe AI subjects and ensures high open rates |
 | **CSV Columns** | `Company, Email, Tag, Region, Note` | `Company, Name, Email` | Simplifies pipeline setup |
 | **Project Routing** | Direct CSV tag mapping | Dynamic keyword-based context matching | Preserves project targeting without manual tags |
 | **Quality Gate** | 100 points: word count & CSV Tag/Note checks | 100 points: name, context match, length sanity | Fits 200-350 word format without false penalties |
@@ -140,10 +140,11 @@ If the script gets interrupted by a network timeout or system shutdown, you can 
 ```bash
 python mailer.py --resume
 ```
-* **Behavior:** Loads the last processed index from the run checkpoint and continues the sequence. You can also specify a folder to resume a specific run:
-```bash
-python mailer.py --resume campaigns/summer_2026/runs/2026-07-11
-```
+* **Behavior:** Loads the last processed index from the run checkpoint and continues the sequence.
+* **Date Rollovers:** If you are resuming a run on a new calendar day (since runs are grouped in directories named by date, e.g., `YYYY-MM-DD`), executing `--resume` without a path will target today's folder. To target a previous day's run, pass the path directly:
+  ```bash
+  python mailer.py --resume campaigns/summer_2026/runs/2026-07-11
+  ```
 
 ---
 

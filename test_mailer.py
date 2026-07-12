@@ -4,6 +4,7 @@ import json
 
 # Import the functions to test
 import mailer
+mailer.OVERRIDE_WITH_PRESET_SUBJECTS = False
 from mailer import (
     is_valid_email,
     calculate_contact_score,
