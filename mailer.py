@@ -252,6 +252,33 @@ def get_next_sender() -> SenderAccount:
         _sender_idx = (_sender_idx + 1) % len(_senders_pool)
         return sender
 
+
+def retire_sender(sender: SenderAccount):
+    global _senders_pool, _sender_idx
+    with _sender_pool_lock:
+        if sender in _senders_pool:
+            _senders_pool.remove(sender)
+            log.warning(f"[bold red]Retired sender account {sender.email} from the pool due to fatal account-level error.[/bold red]")
+            if _senders_pool:
+                _sender_idx = _sender_idx % len(_senders_pool)
+            else:
+                _sender_idx = 0
+
+
+def _is_sender_specific_error(e: Exception) -> bool:
+    """Determine if the SMTP error is specific to the sender account itself (e.g. daily limit exceeded or authentication error)."""
+    if isinstance(e, (smtplib.SMTPAuthenticationError, smtplib.SMTPSenderRefused)):
+        return True
+    
+    code = getattr(e, 'smtp_code', None)
+    msg = str(e).lower()
+    
+    # 550 Daily user sending limit exceeded, or similar quota/limit errors
+    if code == 550 and any(kw in msg for kw in ("limit", "exceeded", "quota", "max", "block")):
+        return True
+        
+    return False
+
 @contextmanager
 def get_smtp_connection(sender: SenderAccount):
     """Context manager for SMTP connection with pooling per sender."""
@@ -332,81 +359,103 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
     if not RESUME_PDF.exists():
         raise FileNotFoundError(f"resume.pdf not found at {RESUME_PDF}")
 
-    sender = get_next_sender()
-    msg = MIMEMultipart()
-    msg["From"]    = f"{SENDER_NAME} <{sender.email}>"
-    msg["To"]      = to_addr
-    msg["Subject"] = subject
-
-    msg.attach(MIMEText(body, "plain"))
-
-    # Generate and add X-Entity-Ref-ID tracking header
-    if company_name:
-        ref_string = f"{company_name}:{to_addr}:{time.time()}"
-        ref_id = hashlib.sha256(ref_string.encode()).hexdigest()[:16]
-        msg["X-Entity-Ref-ID"] = ref_id
-
-    # Attach resume
-    with open(RESUME_PDF, "rb") as f:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(f.read())
-    encoders.encode_base64(part)
-    
-    company_name_clean = re.sub(r'[^a-zA-Z0-9]', '_', company_name) if company_name else ""
-    filename = f"{SENDER_NAME}_Resume_{company_name_clean}.pdf" if company_name_clean else f"{SENDER_NAME}_Resume.pdf"
-    part.add_header(
-        "Content-Disposition",
-        f'attachment; filename="{filename}"',
-    )
-    msg.attach(part)
-
     if dry_run:
-        return True  # pretend success
+        return True
 
-    # Apply intelligent rate limiting
-    time.sleep(_current_delay)
-
-    max_send_attempts = SMTP_MAX_RETRIES
-    for attempt in range(1, max_send_attempts + 1):
+    while True:
         try:
-            with get_smtp_connection(sender) as server:
-                server.sendmail(sender.email, to_addr, msg.as_string())
+            sender = get_next_sender()
+        except RuntimeError:
+            log.error("[bold red]All sender accounts have been retired or none are configured. Cannot send email.[/bold red]")
+            return False
 
-            # Success - update rate limiting
-            update_rate_limit(True)
-            return True
-        except Exception as e:
-            # Determine if error is fatal
-            is_fatal = False
-            code = getattr(e, 'smtp_code', None)
-            
-            if code:
-                # 5xx SMTP codes are permanent failures
-                if 500 <= code < 600:
+        msg = MIMEMultipart()
+        msg["From"]    = f"{SENDER_NAME} <{sender.email}>"
+        msg["To"]      = to_addr
+        msg["Subject"] = subject
+
+        msg.attach(MIMEText(body, "plain"))
+
+        # Generate and add X-Entity-Ref-ID tracking header
+        if company_name:
+            ref_string = f"{company_name}:{to_addr}:{time.time()}"
+            ref_id = hashlib.sha256(ref_string.encode()).hexdigest()[:16]
+            msg["X-Entity-Ref-ID"] = ref_id
+
+        # Attach resume
+        with open(RESUME_PDF, "rb") as f:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(f.read())
+        encoders.encode_base64(part)
+        
+        company_name_clean = re.sub(r'[^a-zA-Z0-9]', '_', company_name) if company_name else ""
+        filename = f"{SENDER_NAME}_Resume_{company_name_clean}.pdf" if company_name_clean else f"{SENDER_NAME}_Resume.pdf"
+        part.add_header(
+            "Content-Disposition",
+            f'attachment; filename="{filename}"',
+        )
+        msg.attach(part)
+
+        # Apply intelligent rate limiting
+        time.sleep(_current_delay)
+
+        success = False
+        sender_failed = False
+        last_exception = None
+
+        max_send_attempts = SMTP_MAX_RETRIES
+        for attempt in range(1, max_send_attempts + 1):
+            try:
+                with get_smtp_connection(sender) as server:
+                    server.sendmail(sender.email, to_addr, msg.as_string())
+
+                # Success - update rate limiting
+                update_rate_limit(True)
+                success = True
+                break
+            except Exception as e:
+                last_exception = e
+                # Check if it is a sender-specific fatal error
+                if _is_sender_specific_error(e):
+                    log.error(f"Fatal account-level error for sender {sender.email}: {e}")
+                    retire_sender(sender)
+                    sender_failed = True
+                    break  # Break retry loop to pick another sender
+
+                # Non-sender-specific retry logic
+                is_fatal = False
+                code = getattr(e, 'smtp_code', None)
+                if code and 500 <= code < 600:
                     is_fatal = True
-            elif isinstance(e, (smtplib.SMTPAuthenticationError, smtplib.SMTPSenderRefused)):
-                is_fatal = True
 
-            if is_fatal:
-                update_rate_limit(False, e)
-                log.error(f"Fatal SMTP error sending to {to_addr} from {sender.email}: {e}")
-                return False
+                if is_fatal:
+                    break
 
-            if attempt < max_send_attempts:
-                log.warning(f"Temporary SMTP error sending to {to_addr} from {sender.email} (attempt {attempt}/{max_send_attempts}): {e}. Retrying in {SMTP_RETRY_DELAY_S}s...")
-                time.sleep(SMTP_RETRY_DELAY_S)
-                with sender.lock:
-                    if sender.connection is not None:
-                        try:
-                            sender.connection.quit()
-                        except Exception:
-                            pass
-                        sender.connection = None
-                continue
-            else:
-                update_rate_limit(False, e)
-                log.error(f"SMTP error sending to {to_addr} from {sender.email} after {max_send_attempts} attempts: {e}")
-                return False
+                if attempt < max_send_attempts:
+                    log.warning(f"Temporary SMTP error sending to {to_addr} from {sender.email} (attempt {attempt}/{max_send_attempts}): {e}. Retrying in {SMTP_RETRY_DELAY_S}s...")
+                    time.sleep(SMTP_RETRY_DELAY_S)
+                    with sender.lock:
+                        if sender.connection is not None:
+                            try:
+                                sender.connection.quit()
+                            except Exception:
+                                pass
+                            sender.connection = None
+                    continue
+                else:
+                    break
+
+        if success:
+            return True
+
+        if sender_failed:
+            log.info(f"Retrying sending email to {to_addr} with next available sender account...")
+            continue
+
+        # If it wasn't a sender failure, it's a real failure (e.g. permanent recipient error or general SMTP failure)
+        update_rate_limit(False, last_exception)
+        log.error(f"SMTP error sending to {to_addr} from {sender.email} after {max_send_attempts} attempts: {last_exception}")
+        return False
 
 
 
@@ -452,7 +501,7 @@ def load_sent_log() -> dict:
 
 
 def save_sent_log(sent: dict):
-    _atomic_write(SENT_LOG, json.dumps(sent, indent=2))
+    _atomic_write(SENT_LOG, json.dumps(sent, indent=2, ensure_ascii=False))
 
 
 def mark_sent(sent: dict, email: str, company: str):
@@ -476,7 +525,7 @@ def load_generation_cache() -> dict:
 
 
 def save_generation_cache(cache: dict):
-    _atomic_write(GEN_CACHE, json.dumps(cache, indent=2))
+    _atomic_write(GEN_CACHE, json.dumps(cache, indent=2, ensure_ascii=False))
 
 
 def get_cached_email(cache: dict, company: dict, about_me: str) -> Optional[dict]:
@@ -627,7 +676,7 @@ def sync_bounces(username, password, imap_server="imap.gmail.com") -> list:
             except Exception:
                 pass
         combined = list(set(existing) | bounced_emails)
-        BOUNCED_LOG.write_text(json.dumps(combined, indent=2))
+        BOUNCED_LOG.write_text(json.dumps(combined, indent=2, ensure_ascii=False))
         if bounced_emails:
             log.info(f"Synced {len(bounced_emails)} newly bounced emails.")
         return combined
@@ -756,7 +805,7 @@ def fetch_company_context(company_name: str, domain: str) -> str:
         with _company_cache_lock:
             _company_cache[domain] = ""
             try:
-                _atomic_write(COMPANY_CACHE, json.dumps(_company_cache, indent=2))
+                _atomic_write(COMPANY_CACHE, json.dumps(_company_cache, indent=2, ensure_ascii=False))
             except Exception as e:
                 log.debug(f"Failed to save company context cache: {e}")
         return ""
@@ -780,7 +829,7 @@ def fetch_company_context(company_name: str, domain: str) -> str:
     with _company_cache_lock:
         _company_cache[domain] = context
         try:
-            _atomic_write(COMPANY_CACHE, json.dumps(_company_cache, indent=2))
+            _atomic_write(COMPANY_CACHE, json.dumps(_company_cache, indent=2, ensure_ascii=False))
         except Exception as e:
             log.debug(f"Failed to save company context cache: {e}")
 
@@ -1658,7 +1707,7 @@ def log_low_quality(company: dict, email_data: dict, score: int):
         "timestamp": datetime.now().isoformat()
     })
     try:
-        LOW_QUALITY_QUEUE.write_text(json.dumps(queue, indent=2))
+        LOW_QUALITY_QUEUE.write_text(json.dumps(queue, indent=2, ensure_ascii=False))
     except Exception as e:
         log.error(f"Failed to log low quality email to queue: {e}")
 
@@ -1920,7 +1969,7 @@ def generate_run_report(stats: dict, failures: list, emails_attempted: list, arg
     
     # Write JSON report
     try:
-        report_filename.write_text(json.dumps(report_data, indent=2))
+        report_filename.write_text(json.dumps(report_data, indent=2, ensure_ascii=False))
         log.info(f"Structured JSON run report written to {report_filename}")
     except Exception as e:
         log.error(f"Failed to write JSON run report: {e}")
@@ -1987,7 +2036,7 @@ def save_checkpoint(last_idx: int, generated_cache: dict, sent_log_snapshot: dic
             "sent_log_snapshot": sent_log_snapshot,
             "timestamp": datetime.now().isoformat()
         }
-        _atomic_write(CHECKPOINT_FILE, json.dumps(checkpoint_data, indent=2))
+        _atomic_write(CHECKPOINT_FILE, json.dumps(checkpoint_data, indent=2, ensure_ascii=False))
         log.debug(f"Saved checkpoint")
     except Exception as e:
         log.error(f"Failed to save checkpoint: {e}")

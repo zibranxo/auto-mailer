@@ -136,7 +136,9 @@ python mailer.py --company-research --variant-count 3 --limit 5
 ---
 
 ### 🔄 5. Resuming From Interruptions (`--resume`)
-If the script gets interrupted by a network timeout or system shutdown, you can safely resume exactly where you left off without duplicating emails:
+If the script gets interrupted by a network timeout or system shutdown, you can safely resume exactly where you left off without duplicating emails.
+
+You can run it as a standalone flag without arguments to automatically resume the latest run:
 ```bash
 python mailer.py --resume
 ```
@@ -162,6 +164,23 @@ Queries DNS MX records before generating an email to ensure the domain actually 
 python mailer.py --check-mx --limit 50
 ```
 * **Benefit:** Saves API tokens by skipping invalid domains before making the LLM inference call.
+
+---
+
+### 📊 8. Rich Terminal Summaries & Run Reports
+Get instant and detailed feedback after a run is completed. Auto Mailer prints a highly styled Rich table summarizing:
+* Total database target targets loaded.
+* Successful vs. failed SMTP sends.
+* Skipped counts categorized by reason (duplicates, already sent, low score, invalid format).
+* LLM draft generation successes and failures.
+
+#### Failure Breakdown Table
+If any errors occurred (e.g. an LLM API error or SMTP failure), it prints a secondary table highlighting the exact company name, email address, stage where it failed, and the error code/message.
+
+#### Auto-Generated File Reports
+At the end of a run, the system also saves two reports under your campaign's run directory:
+* `run_report_YYYYMMDD_HHMMSS.json`: A structured database format for programmatic integration.
+* `run_report_YYYYMMDD_HHMMSS.md`: A beautiful markdown summary document.
 
 ---
 
