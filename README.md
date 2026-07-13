@@ -71,10 +71,16 @@ LLM_BASE_URL=https://integrate.api.nvidia.com/v1
 LLM_MODEL=meta/llama-3.3-70b-instruct
 LLM_FALLBACK_MODEL=deepseek-ai/deepseek-v4-flash
 
-# Sender Configuration
+# Sender Configuration (Supports up to 10 accounts for rotation)
 SENDER_NAME="Arnav Sagar"
-SENDER_EMAIL=arnavsagar1510@gmail.com
-SENDER_APP_PASSWORD=your_gmail_app_password
+SENDER_EMAIL=primary_account@gmail.com
+SENDER_APP_PASSWORD=your_primary_app_password
+
+# Optional secondary accounts (auto-balanced and rotated)
+SENDER_2_EMAIL=secondary_account@gmail.com
+SENDER_2_APP_PASSWORD=your_secondary_app_password
+SENDER_3_EMAIL=third_account@gmail.com
+SENDER_3_APP_PASSWORD=your_third_app_password
 
 # Limits & Quality Gates
 RATE_LIMIT_SECONDS=8
@@ -181,6 +187,14 @@ If any errors occurred (e.g. an LLM API error or SMTP failure), it prints a seco
 At the end of a run, the system also saves two reports under your campaign's run directory:
 * `run_report_YYYYMMDD_HHMMSS.json`: A structured database format for programmatic integration.
 * `run_report_YYYYMMDD_HHMMSS.md`: A beautiful markdown summary document.
+
+---
+
+### 🔄 9. Multi-Sender Load Balancing & Auto-Retirement
+Scale beyond Gmail's rolling 500 emails/day restriction by load-balancing outreach across multiple accounts:
+* **Round-Robin Rotation:** The script automatically rotates through all defined sender accounts (up to 10) in your `.env` file to balance the load evenly.
+* **Auto-Retirement on Block:** If a sender account hits Google's sending limit (`550 Daily user sending limit exceeded`) or has authentication issues, the script will **automatically retire it from the active rotation pool** and output a terminal warning.
+* **Seamless Retry:** The email sending attempt will immediately rotate to the next active sender and retry the delivery—**the draft is never skipped or failed** due to a blocked sender account.
 
 ---
 
