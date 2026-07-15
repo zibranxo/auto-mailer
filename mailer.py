@@ -362,6 +362,9 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
     if dry_run:
         return True
 
+    # Split recipients for SMTP routing
+    to_addrs_list = [addr.strip() for addr in to_addr.split(",") if addr.strip()]
+
     while True:
         try:
             sender = get_next_sender()
@@ -407,7 +410,7 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
         for attempt in range(1, max_send_attempts + 1):
             try:
                 with get_smtp_connection(sender) as server:
-                    server.sendmail(sender.email, to_addr, msg.as_string())
+                    server.sendmail(sender.email, to_addrs_list, msg.as_string())
 
                 # Success - update rate limiting
                 update_rate_limit(True)
@@ -505,8 +508,10 @@ def save_sent_log(sent: dict):
 
 
 def mark_sent(sent: dict, email: str, company: str):
-    email_key = email.strip().lower()
-    sent[email_key] = {"company": company, "sent_at": datetime.now().isoformat()}
+    for addr in email.split(","):
+        email_key = addr.strip().lower()
+        if email_key:
+            sent[email_key] = {"company": company, "sent_at": datetime.now().isoformat()}
     save_sent_log(sent)
 
 
@@ -842,13 +847,15 @@ def calculate_contact_score(company: dict, sent_log: dict = None) -> int:
     """Calculate a contact score based on email validity and domain type (0-5)."""
     score = 0
     email = company["Email"].strip().lower()
+    emails = [e.strip() for e in email.split(",") if e.strip()]
+    primary_email = emails[0] if emails else email
 
     # Email format validity (2 points)
-    if is_valid_email(email):
+    if emails and all(is_valid_email(e) for e in emails):
         score += 2
 
     # Domain type analysis (2 points)
-    email_domain = email.split('@')[-1] if '@' in email else ""
+    email_domain = primary_email.split('@')[-1] if '@' in primary_email else ""
     domain_parts = email_domain.split('.')
     domain_name = '.'.join(domain_parts[:-1]) if len(domain_parts) > 1 else email_domain
     tlds = domain_parts[-1:] if len(domain_parts) > 1 else []
@@ -866,7 +873,7 @@ def calculate_contact_score(company: dict, sent_log: dict = None) -> int:
         score += 1
 
     # Communication history check (1 point if not contacted, -1 if contacted)
-    if sent_log and email in sent_log:
+    if sent_log and any(e in sent_log for e in emails):
         score -= 1
     else:
         score += 1
@@ -2267,38 +2274,41 @@ def main():
     for company in companies:
         raw_email = company["Email"].strip().lower()
 
-        # Try to extract the first valid email address from the field (handles multiple emails / notes)
-        match = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", raw_email)
-        if match:
-            email = match.group(0)
-            company["Email"] = email
-        else:
-            email = raw_email
+        # Find all valid email addresses in the field (handles multiple emails)
+        found_emails = re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", raw_email)
+        if not found_emails:
+            found_emails = [raw_email]
 
-        # Validate email format
-        if not is_valid_email(email):
-            invalid_email_count += 1
-            log.warning(f"Invalid email format, skipping: {company['Company']} -> {raw_email}")
-            continue
-            
-        domain = email.split("@")[1]
-        if args.check_mx:
-            if not has_valid_mx_record(domain):
-                log.warning(f"No valid MX record detected for {domain}, but proceeding anyway: {company['Company']} -> {email}")
+        valid_for_row = []
+        for email in found_emails:
+            # Validate email format
+            if not is_valid_email(email):
+                invalid_email_count += 1
+                log.warning(f"Invalid email format, skipping: {company['Company']} -> {email}")
+                continue
+                
+            domain = email.split("@")[1]
+            if args.check_mx:
+                if not has_valid_mx_record(domain):
+                    log.warning(f"No valid MX record detected for {domain}, but proceeding anyway: {company['Company']} -> {email}")
 
-        # Check for duplicates within CSV
-        if email in seen_emails:
-            duplicate_email_count += 1
-            log.warning(f"Duplicate email within CSV, skipping: {company['Company']} -> {email}")
-            continue
+            # Check for duplicates within CSV
+            if email in seen_emails:
+                duplicate_email_count += 1
+                log.warning(f"Duplicate email within CSV, skipping: {company['Company']} -> {email}")
+                continue
 
-        if email in bounces:
-            invalid_email_count += 1
-            log.warning(f"Email historically bounced, skipping: {company['Company']} -> {email}")
-            continue
+            if email in bounces:
+                invalid_email_count += 1
+                log.warning(f"Email historically bounced, skipping: {company['Company']} -> {email}")
+                continue
 
-        seen_emails.add(email)
-        valid_companies.append(company)
+            seen_emails.add(email)
+            valid_for_row.append(email)
+
+        if valid_for_row:
+            company["Email"] = ", ".join(valid_for_row)
+            valid_companies.append(company)
 
     if invalid_email_count > 0:
         log.info(f"Skipped {invalid_email_count} companies with invalid email format")
@@ -2336,7 +2346,10 @@ def main():
 
     if args.skip_sent:
         before = len(companies)
-        companies = [c for c in companies if c["Email"].strip().lower() not in sent_log]
+        companies = [
+            c for c in companies
+            if not any(e.strip().lower() in sent_log for e in c["Email"].split(","))
+        ]
         skipped = before - len(companies)
         stats["skipped_sent"] = skipped
         if skipped:
@@ -2443,7 +2456,7 @@ def main():
             gen_task = progress.add_task("Generating...", total=len(todo_companies))
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 def process_company(company):
-                    domain = company["Email"].split("@")[-1]
+                    domain = company["Email"].split(",")[0].split("@")[-1].strip()
                     ctx = fetch_company_context(company["Company"], domain) if args.company_research else ""
                     return generate_and_gate_email(
                         about_me, company, args.max_tokens, args.llm_timeout,
@@ -2487,7 +2500,7 @@ def main():
                                 description=f"{co_name}",
                                 advance=0)
                 log.info(f"[{idx}/{len(todo_companies)}] Generating for [bold]{co_name}[/]")
-                domain = to_addr.split("@")[-1]
+                domain = to_addr.split(",")[0].split("@")[-1].strip()
                 ctx = fetch_company_context(co_name, domain) if args.company_research else ""
                 try:
                     generated[email_key] = generate_and_gate_email(
