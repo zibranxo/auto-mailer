@@ -63,6 +63,19 @@ class TestMailer(unittest.TestCase):
         # score = 2 (valid email) + 0 (generic) - 1 (contacted) = 1
         self.assertEqual(calculate_contact_score(co_generic, sent_log), 1)
 
+        # Case 4: Multiple valid corporate emails
+        co_multi = {
+            "Company": "AI Corp",
+            "Email": "hr@aicorp.com, boss@aicorp.com",
+        }
+        # score = 2 (valid emails) + 2 (corporate domain of primary) + 1 (not contacted) = 5
+        self.assertEqual(calculate_contact_score(co_multi), 5)
+
+        # Case 5: Multiple emails with one contacted
+        sent_log_multi = {"boss@aicorp.com": {"company": "AI Corp"}}
+        # score = 2 (valid emails) + 2 (corporate domain of primary) - 1 (one of them contacted) = 3
+        self.assertEqual(calculate_contact_score(co_multi, sent_log_multi), 3)
+
     def test_parse_email_json(self):
         # Case 1: Clean JSON
         raw_clean = '{"subject": "Hello", "body": "This is a body."}'
@@ -195,6 +208,37 @@ class TestMailer(unittest.TestCase):
         self.assertTrue(result)
         mock_server.login.assert_called_once()
         mock_server.sendmail.assert_called_once()
+        args, kwargs = mock_server.sendmail.call_args
+        self.assertEqual(args[0], "me@gmail.com")
+        self.assertEqual(args[1], ["test@example.com"])
+
+    @patch("mailer.get_next_sender")
+    @patch("mailer.RESUME_PDF")
+    @patch("builtins.open", new_callable=mock_open, read_data=b"mock pdf content")
+    @patch("mailer.smtplib.SMTP")
+    def test_send_email_multiple_mock(self, mock_smtp, mock_open_file, mock_resume_pdf, mock_get_next_sender):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        mock_resume_pdf.exists.return_value = True
+        
+        mock_sender = MagicMock()
+        mock_sender.email = "me@gmail.com"
+        mock_sender.uses_count = 0
+        mock_sender.last_used = 0.0
+        mock_get_next_sender.return_value = mock_sender
+        
+        result = mailer.send_email(
+            "test1@example.com, test2@example.com",
+            "Test Subj",
+            "Test Body",
+            company_name="TestCorp",
+            dry_run=False
+        )
+        self.assertTrue(result)
+        mock_server.sendmail.assert_called_once()
+        args, kwargs = mock_server.sendmail.call_args
+        self.assertEqual(args[0], "me@gmail.com")
+        self.assertEqual(args[1], ["test1@example.com", "test2@example.com"])
 
 if __name__ == "__main__":
     unittest.main()
