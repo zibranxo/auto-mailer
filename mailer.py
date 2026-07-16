@@ -375,9 +375,13 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
         msg = MIMEMultipart()
         msg["From"]    = f"{SENDER_NAME} <{sender.email}>"
         msg["To"]      = to_addr
-        msg["Subject"] = subject
+        
+        # Format Subject with Header to support non-ASCII characters correctly
+        from email.header import Header
+        msg["Subject"] = Header(subject, "utf-8")
 
-        msg.attach(MIMEText(body, "plain"))
+        # Explicitly encode the body as utf-8
+        msg.attach(MIMEText(body, "plain", "utf-8"))
 
         # Generate and add X-Entity-Ref-ID tracking header
         if company_name:
@@ -495,7 +499,7 @@ def _atomic_write(path: Path, content: str) -> None:
 def load_sent_log() -> dict:
     if SENT_LOG.exists():
         try:
-            data = json.loads(SENT_LOG.read_text())
+            data = json.loads(SENT_LOG.read_text(encoding="utf-8"))
             # Normalize keys to lowercase and stripped
             return {k.strip().lower(): v for k, v in data.items() if k}
         except Exception as e:
@@ -525,7 +529,7 @@ def _cache_key(company: dict, about_me: str) -> str:
 
 def load_generation_cache() -> dict:
     if GEN_CACHE.exists():
-        return json.loads(GEN_CACHE.read_text())
+        return json.loads(GEN_CACHE.read_text(encoding="utf-8"))
     return {}
 
 
@@ -575,14 +579,41 @@ def check_api_health(client: OpenAI, model: str = None, timeout: float = 10) -> 
 def load_companies() -> list[dict]:
     if not CSV_FILE.exists():
         raise FileNotFoundError(f"CSV not found: {CSV_FILE}")
+    
+    # Header normalization aliases
+    company_aliases = {"company", "leading campus recruitment", "company name", "organization", "org"}
+    name_aliases = {"name", "hr name", "contact name", "recruiter name", "contact"}
+    email_aliases = {"email", "email address", "email_address", "mail"}
+
     rows = []
     with open(CSV_FILE, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            # Clean keys/values
-            cleaned_row = {k.strip(): v.strip() for k, v in row.items() if k}
-            # Ensure name defaults to "Hiring Team" if empty
+            cleaned_row = {}
+            for k, v in row.items():
+                if not k:
+                    continue
+                k_clean = k.strip()
+                v_clean = v.strip() if v else ""
+                k_lower = k_clean.lower()
+                
+                # Map standard keys
+                if k_lower in company_aliases:
+                    cleaned_row["Company"] = v_clean
+                elif k_lower in name_aliases:
+                    cleaned_row["Name"] = v_clean
+                elif k_lower in email_aliases:
+                    cleaned_row["Email"] = v_clean
+                else:
+                    cleaned_row[k_clean] = v_clean
+            
+            # Defaults if missing or empty
+            if "Company" not in cleaned_row:
+                cleaned_row["Company"] = ""
             if not cleaned_row.get("Name"):
                 cleaned_row["Name"] = "Hiring Team"
+            if "Email" not in cleaned_row:
+                cleaned_row["Email"] = ""
+                
             rows.append(cleaned_row)
     return rows
 
@@ -677,11 +708,11 @@ def sync_bounces(username, password, imap_server="imap.gmail.com") -> list:
         existing = []
         if BOUNCED_LOG.exists():
             try:
-                existing = json.loads(BOUNCED_LOG.read_text())
+                existing = json.loads(BOUNCED_LOG.read_text(encoding="utf-8"))
             except Exception:
                 pass
         combined = list(set(existing) | bounced_emails)
-        BOUNCED_LOG.write_text(json.dumps(combined, indent=2, ensure_ascii=False))
+        BOUNCED_LOG.write_text(json.dumps(combined, indent=2, ensure_ascii=False), encoding="utf-8")
         if bounced_emails:
             log.info(f"Synced {len(bounced_emails)} newly bounced emails.")
         return combined
@@ -692,7 +723,7 @@ def sync_bounces(username, password, imap_server="imap.gmail.com") -> list:
 def load_bounces() -> set:
     if BOUNCED_LOG.exists():
         try:
-            return set(json.loads(BOUNCED_LOG.read_text()))
+            return set(json.loads(BOUNCED_LOG.read_text(encoding="utf-8")))
         except Exception:
             pass
     return set()
@@ -1702,7 +1733,7 @@ def log_low_quality(company: dict, email_data: dict, score: int):
     queue = []
     if LOW_QUALITY_QUEUE.exists():
         try:
-            queue = json.loads(LOW_QUALITY_QUEUE.read_text())
+            queue = json.loads(LOW_QUALITY_QUEUE.read_text(encoding="utf-8"))
         except Exception:
             pass
     queue.append({
@@ -1714,7 +1745,7 @@ def log_low_quality(company: dict, email_data: dict, score: int):
         "timestamp": datetime.now().isoformat()
     })
     try:
-        LOW_QUALITY_QUEUE.write_text(json.dumps(queue, indent=2, ensure_ascii=False))
+        LOW_QUALITY_QUEUE.write_text(json.dumps(queue, indent=2, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         log.error(f"Failed to log low quality email to queue: {e}")
 
@@ -1976,7 +2007,7 @@ def generate_run_report(stats: dict, failures: list, emails_attempted: list, arg
     
     # Write JSON report
     try:
-        report_filename.write_text(json.dumps(report_data, indent=2, ensure_ascii=False))
+        report_filename.write_text(json.dumps(report_data, indent=2, ensure_ascii=False), encoding="utf-8")
         log.info(f"Structured JSON run report written to {report_filename}")
     except Exception as e:
         log.error(f"Failed to write JSON run report: {e}")
@@ -2013,7 +2044,7 @@ def generate_run_report(stats: dict, failures: list, emails_attempted: list, arg
         md_content += "\n*No failures during this run.*\n"
         
     try:
-        summary_filename.write_text(md_content)
+        summary_filename.write_text(md_content, encoding="utf-8")
         log.info(f"Markdown summary report written to {summary_filename}")
     except Exception as e:
         log.error(f"Failed to write Markdown summary report: {e}")
@@ -2025,7 +2056,7 @@ def load_checkpoint() -> Optional[dict]:
     """Load checkpoint if it exists and is valid."""
     if CHECKPOINT_FILE and CHECKPOINT_FILE.exists():
         try:
-            data = json.loads(CHECKPOINT_FILE.read_text())
+            data = json.loads(CHECKPOINT_FILE.read_text(encoding="utf-8"))
             return data
         except Exception as e:
             log.warning(f"Failed to load checkpoint: {e}")
