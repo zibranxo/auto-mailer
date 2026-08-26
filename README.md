@@ -30,7 +30,7 @@ graph TD
     F --> H[build_candidate_context]
     G --> H
     H -->|Selects relevant projects from DOMAIN_PROJECT_MAP| I[Injects CLASP / Regavis / RAGS descriptions]
-    I --> J[LLM Generation]
+    I --> J[Multi-Key LLM Engine: Failover & Rotation]
     J --> K[Format validation: 4 Paragraphs, Dynamic Subject]
     K --> L[Programmatic python sign-off append]
     L --> M[calculate_quality_score Gate]
@@ -40,11 +40,13 @@ graph TD
 
 | Component | Legacy Code (v1.0) | Upgraded Code (v2.0) | Rationale |
 | :--- | :--- | :--- | :--- |
+| **Multi-Key Failover** | Single API Key (Hard crash on 429) | Multi-Key Pool (`LLM_API_KEY=k1,k2,k3`) with automatic quarantine | 100% uninterrupted generation across provider rate limits |
 | **Token Budget** | `GEN_MAX_TOKENS = 420` | `GEN_MAX_TOKENS = 1500` | Fixes mid-generation truncation crash |
-| **Subject Lines** | Hardcoded static string variable | Curated professional preset subjects (deterministic mapping) | Prevents generic or cringe AI subjects and ensures high open rates |
+| **Subject Lines** | Hardcoded static / generic strings | Curated human-written Systems & ML preset subjects | High open rates, zero hackathon spam triggers |
+| **Outreach Tone** | Generic buzzwords, brief call asks | Vision appreciation, deep technical pitch, direct ask | Authentic, human-written tone; no forced demo requests |
 | **CSV Columns** | `Company, Email, Tag, Region, Note` | `Company, Name, Email` | Simplifies pipeline setup |
 | **Project Routing** | Direct CSV tag mapping | Dynamic keyword-based context matching | Preserves project targeting without manual tags |
-| **Quality Gate** | 100 points: word count & CSV Tag/Note checks | 100 points: name, context match, length sanity | Fits 250-400 word format without false penalties |
+| **Quality Gate** | 100 points: word count & CSV Tag/Note checks | 100 points: name, context match, length sanity | Fits 220-350 word format without false penalties |
 | **Contact Score** | 10-point scale: Tag/Note/Region weight | 5-point scale: Email validity, corporate domain, sent history | Removes dead weight columns |
 | **Fallback Template** | Legacy 4-bullet layout with old details | Modern 4-paragraph layout with CLASP & Regavis | Matches standard generation format |
 | **Checkpoint Sender** | Index-based lookup (`"1"`, `"2"`) | Email-based lookup (with fallback to index string) | Restores checkpoint safety and migration compatibility |
@@ -64,11 +66,13 @@ pip install -r requirements.txt
 ### 2. Configuration (`.env`)
 Create a `.env` file in the root directory. Auto Mailer v2 has moved *all* tunable parameters to environment variables for maximum flexibility.
 
-# LLM Provider Configuration (Supports multi-key pool for automatic failover)
-# Option A: Comma-separated keys for same provider
+```env
+# ── LLM Provider Configuration ──────────────────────────────────────────
+# Multi-Key Pool for Zero-Interruption Failover:
+# Option A (Comma-separated keys for same provider):
 LLM_API_KEY=nvapi-key-1,nvapi-key-2,nvapi-key-3
 
-# Option B: Or numbered environment variables
+# Option B (Numbered environment variables):
 # LLM_API_KEY=nvapi-key-1
 # LLM_2_API_KEY=nvapi-key-2
 # LLM_3_API_KEY=nvapi-key-3
@@ -76,8 +80,9 @@ LLM_API_KEY=nvapi-key-1,nvapi-key-2,nvapi-key-3
 LLM_BASE_URL=https://integrate.api.nvidia.com/v1
 LLM_MODEL=meta/llama-3.3-70b-instruct
 LLM_FALLBACK_MODEL=deepseek-ai/deepseek-v4-flash
+LLM_QUARANTINE_S=600
 
-# Sender Configuration (Supports up to 10 accounts for rotation)
+# ── Sender Configuration (Supports up to 10 accounts for rotation) ──────
 SENDER_NAME="Arnav Sagar"
 SENDER_EMAIL=primary_account@gmail.com
 SENDER_APP_PASSWORD=your_primary_app_password
@@ -88,7 +93,7 @@ SENDER_2_APP_PASSWORD=your_secondary_app_password
 SENDER_3_EMAIL=third_account@gmail.com
 SENDER_3_APP_PASSWORD=your_third_app_password
 
-# Limits & Quality Gates
+# ── Limits & Quality Gates ──────────────────────────────────────────────
 RATE_LIMIT_SECONDS=4
 GEN_MAX_TOKENS=1500
 EMAIL_MAX_WORDS=400
@@ -109,7 +114,25 @@ Ensure the following files are populated in the root directory:
 
 ## 🚀 Core Features User Guide
 
-### 📂 1. Campaign Folder Encapsulation (`--folder`)
+### 🔑 1. Multi-API Key Failover Engine
+Never get blocked by LLM rate limits or billing interruptions again:
+* **Multi-Key Pool**: Provide multiple API keys for the same provider via `LLM_API_KEY=key1,key2,key3` or numbered variables (`LLM_API_KEY`, `LLM_2_API_KEY`, `LLM_3_API_KEY`).
+* **In-Flight 429 Failover**: When a key hits `429 Too Many Requests`, it is quarantined for `LLM_QUARANTINE_S` (10 minutes) and generation immediately fails over to the next key without failing the draft.
+* **Auth & Quota Protection**: If a key hits `401 Unauthorized` or quota exhaustion, it is automatically disabled for the run and generation continues with the remaining keys.
+
+---
+
+### ✍️ 2. Natural, Human-Written ML & Systems Design Outreach
+Emails are crafted to sound like an authentic, highly capable engineering student reaching out directly to a team:
+* **Company Appreciation**: Opens with genuine appreciation for what the company is building and its vision.
+* **Candidate Background & Fit**: Highlights Arnav Sagar (DTU Software Engineering, CGPA 8.75) and strong Data Structures & Algorithms (DSA) problem-solving skills in C++ and Python.
+* **Engineering Depth**: Deep dives into 2 key matching projects with concrete technical metrics (e.g. CLASP distributed proxy with token-bucket rate limiting across 18 APIs; Regavis audio deepfake cascade cutting compute ~85%; AIMS-DTU sub-10ms moderation pipeline).
+* **Direct & Humble Ask**: Confirms resume is attached and directly asks for internship consideration—**zero pressure for brief calls, 10-minute chats, or live demos**.
+* **Zero Hackathon Cliches**: Purged of generic hackathon/contest bragging in both subject lines and email copy.
+
+---
+
+### 📂 3. Campaign Folder Encapsulation (`--folder`)
 Isolate different outreach campaigns cleanly. Instead of mixing targets and checkpoints, you can isolate all inputs and output run reports into a specific campaign directory:
 ```bash
 python mailer.py --folder campaigns/summer_2026 --dry-run
@@ -274,5 +297,5 @@ auto-mailer/
 
 <div align="center">
   <p><i>Ensure compliance with CAN-SPAM, GDPR, or applicable local outreach regulations when utilizing automated email sequences.</i></p>
-  <p>Built with ❤️ for intelligent automation by Aranv Sagar.</p>
+  <p>Built with ❤️ for intelligent automation by Arnav Sagar.</p>
 </div>
