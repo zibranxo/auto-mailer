@@ -12,7 +12,7 @@
 ## Education
 
 **Delhi Technological University (DTU)**, New Delhi
-B.Tech – Software Engineering | CGPA: **8.75/10** | Jul 2024 – Jun 2028
+B.Tech – Software Engineering | CGPA: **8.76/10** | Jul 2024 – Jun 2028 (3rd year)
 
 **Kendriya Vidyalaya Sector-47**, Chandigarh
 12th: 93% | 10th: 94.4% | 2020–2023
@@ -24,7 +24,9 @@ B.Tech – Software Engineering | CGPA: **8.75/10** | Jul 2024 – Jun 2028
 ### Regavis Labs Pvt Ltd — Machine Learning Intern
 *Jun 2026 – Present*
 
-Architecting a two-stage cascade for real-time audio deepfake detection on RingWave, a live-calling platform: a Voice Activity Detector gates audio into a lightweight LFCC-LCNN first-pass screener, escalating only ambiguous segments to an SSL-based second-stage verifier (XLSR-53 + AASIST). This cuts average inference compute cost by **85%** versus running full verification on every frame. Includes a Hindi/Indic data bootstrap strategy to cover underrepresented accents, VoIP-channel augmentation for real-world call degradation, and a two-policy aggregation layer that reconciles the two stages' outputs into a single call-level verdict.
+ML engineering internship at an AI startup building real-time audio deepfake/spoof detection for a live-calling platform. Working within the audio detection team on a multi-stage verification pipeline that cuts average inference compute cost by **~85%** versus running full verification on every frame, while holding detection quality steady enough for live deployment. First experience building AI systems inside a startup engineering team rather than a research lab — covers architectural decision-making, iterative development, and cross-functional collaboration.
+
+*(Note: internal architecture details are confidential — keep this description high-level in outreach.)*
 
 ### 5G Lab, Department of Telecommunications (GoI) — DTU — Research Intern
 *Jun 2025*
@@ -43,10 +45,10 @@ Deployed a session-aware jailbreak and toxicity classifier: MiniLM cosine simila
 
 ## Projects
 
-### CLASP — Claude API Switching Proxy
+### CLASP — Claude API Switching Proxy (Systems Design)
 *GitHub: github.com/zibranxo/clasp*
 
-Rate-limit-aware multi-provider proxy routing LLM traffic (Claude Code / Codex-style clients) across **18 inference providers**, using a pre-emptive token-bucket limiter and multi-key pool rotation with circuit breakers to eliminate 429 errors. Includes an async priority queue with SSE keep-alive absorption to buffer requests during quota exhaustion, a three-tier LRU/SQLite/semantic (FAISS) cache, and an Anthropic↔OpenAI protocol translator. **934 passing tests.**
+A distributed-systems-style API gateway, not just an LLM wrapper — the core engineering problem is reliability under failure and contention, applied to LLM inference traffic. Routes requests across **18 inference providers** with a pre-emptive token-bucket rate limiter (predicts quota exhaustion instead of reacting to 429s), multi-key pool rotation, and per-provider circuit breakers to isolate failures and prevent cascading outages. An async priority queue with SSE keep-alive absorption buffers in-flight requests during quota exhaustion so active client sessions never drop. Backed by a three-tier cache (in-memory LRU → SQLite → semantic/FAISS) to cut redundant upstream calls, plus a protocol translation layer (Anthropic ↔ OpenAI) for cross-provider compatibility. **934 passing automated tests**, including failover and streaming-continuity scenarios. Demonstrates rate limiting, load balancing, caching, fault isolation, and async request scheduling — core distributed-systems concerns independent of the LLM use case.
 
 ### CAF-OTSRNet — Cross-Attention Fusion Thermal Super-Resolution
 *Stack: PyTorch, Streamlit, Gradio, Rasterio, GeoPandas*
@@ -74,35 +76,44 @@ Interactive visualization tool for RAG chunking strategies — character, token,
 ### AI vs Human Text Classification System
 *Stack: Python, PyTorch, RoBERTa (fine-tuned), scikit-learn, GPU XGBoost*
 
-Benchmarked 8+ classical and ensemble models (Logistic Regression, SVM, Naive Bayes, Decision Trees, Random Forest + AdaBoost, kNN, ANN, attention-based LSTMs) against a fine-tuned RoBERTa on ~200K samples. **RoBERTa accuracy: 0.9996.** GPU-accelerated training pipeline cut training time from 35 min to 6 min.
+Benchmarked 8+ classical and ensemble models (Logistic Regression, SVM, Naive Bayes, Decision Trees, Random Forest + AdaBoost, kNN, ANN, attention-based LSTMs) against a fine-tuned RoBERTa on ~200K samples. **RoBERTa accuracy: 0.9996.** GPU-accelerated training pipeline cut training time from 35 min to 6 min via a PyTorch RF + CUDA XGBoost pipeline.
 
 ---
 
 ## Technical Skills
 
-- **Languages:** Python, C/C++, JavaScript, HTML/CSS, SQL
+- **Languages:** C/C++ (strong), Python, JavaScript, SQL, HTML/CSS
+- **Core CS:** Data Structures & Algorithms (strong), System Design, Operating Systems, Computer Networks, Database Internals
+- **Web/SDE Stack:** MERN (MongoDB, Express, React, Node.js), REST API design, AsyncIO, WebSockets
 - **ML/AI Frameworks:** PyTorch, TensorFlow, ONNX, HuggingFace Transformers, OpenCV, Pandas, NumPy, LlamaIndex
-- **Infrastructure & Tools:** FastAPI, Docker, Git, W&B, ROS2 (Humble), Streamlit, Redis, FAISS, AsyncIO, WebSockets
+- **Infrastructure & Tools:** FastAPI, Docker, Git, Redis, FAISS, W&B, ROS2 (Humble), Streamlit
 
 ---
 
 ## Achievements
 
 - **National Finalist, Smart India Hackathon 2025** — Ahmedabad, India (ISRO problem statement)
+- **Research Presentation, PEC Chandigarh** — "AI-Based Intrusion Detection Systems in 5G Networks"
 - **Coordinator**, Business Bulls, DTU (Finance & Strategy Club)
 
 ---
 
 ## What I'm Looking For
 
-**Role type:** AI/ML Engineering internship or early-career role
+**Role type:** Software Development Engineering (SDE) internships and AI/ML Engineering internships — equal focus on both, not treating one as a fallback for the other.
 
-**Strongest fit areas:**
+**SDE fit areas:**
+- Backend engineering, distributed systems, API design
+- System design — rate limiting, caching, fault tolerance, async scheduling (CLASP is the primary evidence here)
+- Strong DSA and competitive-programming fundamentals; comfortable in C++ and Python
+- Full-stack/MERN exposure alongside core backend work
+
+**ML/AI fit areas:**
 - Applied AI / LLM systems — RAG pipelines, multi-provider LLM infrastructure, prompt engineering
 - LLM safety, red-teaming, and evaluation
 - Edge AI / on-device ML inference
 - Audio/speech ML — deepfake and spoof detection, real-time inference under compute constraints
 
-**Location:** Delhi / Bangalore / remote (India) or remote global
+**Location:** Delhi / Bangalore / remote (India) or remote (anywhere)
 
-**Why relevant at 2nd year:** Three research/ML internships (AIMS-DTU, 5G Lab, Regavis Labs) completed before the end of second year, each producing a shipped or production-integrated system — not coursework. I build end-to-end: data pipelines → model training/architecture design → production serving (FastAPI) → live demos. I can explain design decisions under pressure, debug in real time, and translate technical work into communication a non-technical team can act on.
+**Why relevant now:** Three research/ML internships (AIMS-DTU, 5G Lab, Regavis Labs) across two years, each producing a shipped or production-integrated system — not coursework. I build end-to-end: architecture and system design → implementation → production serving → live demos, whether the system is a backend service or a model pipeline. I can explain design decisions under pressure, debug in real time, and translate technical work into communication a non-technical team can act on.

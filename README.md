@@ -44,7 +44,7 @@ graph TD
 | **Subject Lines** | Hardcoded static string variable | Curated professional preset subjects (deterministic mapping) | Prevents generic or cringe AI subjects and ensures high open rates |
 | **CSV Columns** | `Company, Email, Tag, Region, Note` | `Company, Name, Email` | Simplifies pipeline setup |
 | **Project Routing** | Direct CSV tag mapping | Dynamic keyword-based context matching | Preserves project targeting without manual tags |
-| **Quality Gate** | 100 points: word count & CSV Tag/Note checks | 100 points: name, context match, length sanity | Fits 200-350 word format without false penalties |
+| **Quality Gate** | 100 points: word count & CSV Tag/Note checks | 100 points: name, context match, length sanity | Fits 250-400 word format without false penalties |
 | **Contact Score** | 10-point scale: Tag/Note/Region weight | 5-point scale: Email validity, corporate domain, sent history | Removes dead weight columns |
 | **Fallback Template** | Legacy 4-bullet layout with old details | Modern 4-paragraph layout with CLASP & Regavis | Matches standard generation format |
 | **Checkpoint Sender** | Index-based lookup (`"1"`, `"2"`) | Email-based lookup (with fallback to index string) | Restores checkpoint safety and migration compatibility |
@@ -64,9 +64,15 @@ pip install -r requirements.txt
 ### 2. Configuration (`.env`)
 Create a `.env` file in the root directory. Auto Mailer v2 has moved *all* tunable parameters to environment variables for maximum flexibility.
 
-```env
-# Primary Provider (e.g., NVIDIA NIM or DeepSeek)
-LLM_API_KEY=nvapi-your-key-here
+# LLM Provider Configuration (Supports multi-key pool for automatic failover)
+# Option A: Comma-separated keys for same provider
+LLM_API_KEY=nvapi-key-1,nvapi-key-2,nvapi-key-3
+
+# Option B: Or numbered environment variables
+# LLM_API_KEY=nvapi-key-1
+# LLM_2_API_KEY=nvapi-key-2
+# LLM_3_API_KEY=nvapi-key-3
+
 LLM_BASE_URL=https://integrate.api.nvidia.com/v1
 LLM_MODEL=meta/llama-3.3-70b-instruct
 LLM_FALLBACK_MODEL=deepseek-ai/deepseek-v4-flash
@@ -83,7 +89,7 @@ SENDER_3_EMAIL=third_account@gmail.com
 SENDER_3_APP_PASSWORD=your_third_app_password
 
 # Limits & Quality Gates
-RATE_LIMIT_SECONDS=8
+RATE_LIMIT_SECONDS=4
 GEN_MAX_TOKENS=1500
 EMAIL_MAX_WORDS=400
 EMAIL_MAX_SUBJECT_LEN=100
@@ -169,7 +175,7 @@ Queries DNS MX records before generating an email to ensure the domain actually 
 ```bash
 python mailer.py --check-mx --limit 50
 ```
-* **Benefit:** Saves API tokens by skipping invalid domains before making the LLM inference call.
+* **Benefit:** Skips invalid domains entirely to protect your domain sending reputation and completely avoid hard bounces.
 
 ---
 
@@ -195,6 +201,14 @@ Scale beyond Gmail's rolling 500 emails/day restriction by load-balancing outrea
 * **Round-Robin Rotation:** The script automatically rotates through all defined sender accounts (up to 10) in your `.env` file to balance the load evenly.
 * **Auto-Retirement on Block:** If a sender account hits Google's sending limit (`550 Daily user sending limit exceeded`) or has authentication issues, the script will **automatically retire it from the active rotation pool** and output a terminal warning.
 * **Seamless Retry:** The email sending attempt will immediately rotate to the next active sender and retry the delivery—**the draft is never skipped or failed** due to a blocked sender account.
+
+---
+
+### 🛡️ 10. Intelligent Deliverability & Spam Mitigation
+Avoid hitting spam folders and maintain your sender account reputation:
+* **Randomized Jitter Pacing:** Introduces dynamic randomized sleep variation (80% to 120% of your configured `RATE_LIMIT_SECONDS`) between email dispatches to prevent bot-like patterns and mimic natural human behavior.
+* **No Tracking Headers:** Disables non-standard headers (like `X-Entity-Ref-ID`) that corporate mail filters commonly flag as bulk cold outreach indicators.
+* **Smart Charset Formatting:** Configures MIME components (`MIMEText`, `Header`) explicitly to UTF-8 to prevent character encoding degradation (e.g. garbled characters) on modern mail clients.
 
 ---
 

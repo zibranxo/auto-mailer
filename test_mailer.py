@@ -240,5 +240,85 @@ class TestMailer(unittest.TestCase):
         self.assertEqual(args[0], "me@gmail.com")
         self.assertEqual(args[1], ["test1@example.com", "test2@example.com"])
 
+    def test_preset_subjects_quality_and_no_hackathons(self):
+        for subject in mailer.PRESET_SUBJECTS:
+            self.assertNotIn("hackathon", subject.lower(), f"Subject contains hackathon: {subject}")
+            self.assertNotIn("contest", subject.lower(), f"Subject contains contest: {subject}")
+            self.assertTrue(len(subject) <= mailer.EMAIL_MAX_SUBJECT_LEN)
+            # Verify subject touches ML, Systems, DSA, or Software Engineering
+            matches_focus = any(kw in subject.lower() for kw in [
+                "systems", "ml", "ai", "dsa", "software", "engineering", "backend", "distributed", "algorithms", "proxy", "rate-limiting"
+            ])
+            self.assertTrue(matches_focus, f"Subject does not match core focus areas: {subject}")
+
+    @patch.dict(mailer.os.environ, {
+        "LLM_API_KEY": "key_alpha, key_beta",
+        "LLM_3_API_KEY": "key_gamma",
+        "LLM_BASE_URL": "https://test.llm.com/v1"
+    }, clear=True)
+    def test_init_llm_providers_multi_key(self):
+        providers = mailer.init_llm_providers()
+        self.assertEqual(len(providers), 3)
+        self.assertEqual(providers[0].name, "Key_1")
+        self.assertEqual(providers[0].client.api_key, "key_alpha")
+        self.assertEqual(providers[1].name, "Key_2")
+        self.assertEqual(providers[1].client.api_key, "key_beta")
+        self.assertEqual(providers[2].name, "Key_3")
+        self.assertEqual(providers[2].client.api_key, "key_gamma")
+        # All inherit base URL
+        for p in providers:
+            self.assertEqual(str(p.client.base_url), "https://test.llm.com/v1/")
+
+    def test_get_active_provider_failover(self):
+        p1 = mailer.LLMProvider(name="K1", client=MagicMock(), model="m", fallback_model="m")
+        p2 = mailer.LLMProvider(name="K2", client=MagicMock(), model="m", fallback_model="m")
+        with mailer._provider_pool_lock:
+            mailer._provider_pool.clear()
+            mailer._provider_pool.extend([p1, p2])
+            mailer._provider_idx = 0
+
+        # Normal round-robin
+        self.assertEqual(mailer.get_active_provider().name, "K1")
+        self.assertEqual(mailer.get_active_provider().name, "K2")
+        self.assertEqual(mailer.get_active_provider().name, "K1")
+
+        # Quarantine K1
+        p1.exhausted_until = mailer.time.time() + 3600
+        self.assertEqual(mailer.get_active_provider().name, "K2")
+        self.assertEqual(mailer.get_active_provider().name, "K2")
+
+    @patch("mailer.generate_email")
+    def test_generate_email_with_retry_failover_429(self, mock_gen):
+        p1 = mailer.LLMProvider(name="K1", client=MagicMock(), model="m", fallback_model="m")
+        p2 = mailer.LLMProvider(name="K2", client=MagicMock(), model="m", fallback_model="m")
+        with mailer._provider_pool_lock:
+            mailer._provider_pool.clear()
+            mailer._provider_pool.extend([p1, p2])
+            mailer._provider_idx = 0
+
+        # Simulate p1 raising 429 and p2 succeeding
+        def side_effect(provider, *args, **kwargs):
+            if provider.name == "K1":
+                raise Exception("429 Too Many Requests: Rate limit exceeded")
+            return {"subject": "Valid Subject", "body": "Valid Body"}
+
+        mock_gen.side_effect = side_effect
+
+        company = {"Company": "TechCorp", "Email": "hr@techcorp.com"}
+        result = mailer.generate_email_with_retry(
+            about_me="bio",
+            company=company,
+            max_tokens=500,
+            timeout_s=10.0,
+            max_retries=1,
+            backoff_base=0.01,
+            temperature=0.2,
+            top_p=0.9,
+            thinking=False,
+            reasoning_effort="none"
+        )
+        self.assertEqual(result["subject"], "Valid Subject")
+        self.assertTrue(p1.exhausted_until > mailer.time.time())
+
 if __name__ == "__main__":
     unittest.main()

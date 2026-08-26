@@ -88,31 +88,26 @@ _company_cache = {}
 _company_cache_lock = threading.Lock()
 
 PRESET_SUBJECTS = [
-    "Software Engineering Internship Application — DTU '28",
-    "SDE Intern Application — B.Tech Software Engineering, DTU",
-    "Internship Inquiry: Software Development Role",
-    "Application for Software Engineer Intern Position",
-    "SDE Internship — Second-Year Engineering Student, DTU",
-    "Software Engineering Intern — CGPA 8.75, Available for Internship",
-    "Internship Application: Backend/Systems Development",
-    "SDE Intern Inquiry — Production Systems Experience",
-    "Software Development Internship — DTU Sophomore",
-    "Application for SDE Internship — System Design & Backend Focus",
-    "Internship Application: Software Engineer, DTU '28",
-    "SDE Intern — Hackathon Finalist Seeking Internship Opportunity",
-    "Software Engineering Internship — Available Summer/Off-Cycle",
-    "Internship Application: Full-Stack Development Role",
-    "SDE Intern Application — National Hackathon Finalist (SIH 2025)",
-    "Software Development Internship Inquiry — DTU Student",
-    "Application for Software Engineering Internship — Immediate Availability",
-    "SDE Intern — System Design, APIs, and Backend Infrastructure",
-    "Internship Application: Software Engineer Role, DTU",
-    "Software Engineering Internship — Strong Academic + Project Record",
-    "Application for SDE Internship — Coordinator, Business Bulls DTU",
-    "SDE Intern Inquiry — Distributed Systems & Backend Projects",
-    "Internship Application: Software Developer, 2028 Graduate",
-    "Software Engineering Internship — Open to Remote/On-site",
-    "SDE Intern Application — Systems & Infrastructure Focus",
+    "Software Engineering Intern Application — Systems Design & ML (DTU '28)",
+    "SDE / ML Intern Application — Distributed Systems & ML Pipelines",
+    "Software Engineering Internship — Backend Systems, DSA & AI/ML",
+    "SDE Intern Inquiry — Low-Latency Pipelines & Distributed Systems",
+    "Application for SDE Intern — System Design & Backend Infrastructure",
+    "SDE / AI Engineering Internship — High-Throughput Proxy & Real-Time ML",
+    "Software Engineer Intern — Rate-Limiting, Caching & ML Systems",
+    "SDE Intern Application — Core CS, DSA & Backend Systems",
+    "Software Engineering Internship — Distributed Systems & ML Focus",
+    "Application for SDE / ML Internship — Systems Design & Algorithms",
+    "SDE Intern Inquiry — Low-Latency Inference & Systems Engineering",
+    "Software Engineering Intern — DTU Sophomore (Systems & ML Focus)",
+    "SDE / AI Intern Application — High-Performance Systems & DSA",
+    "Software Development Internship — Systems Design, APIs & ML",
+    "Application for Software Engineering Intern — Systems & ML Infra",
+    "SDE Intern — Backend Architecture, Rate-Limiting & ML Systems",
+    "Software Engineering Internship Inquiry — Systems & ML Engineering",
+    "SDE / ML Intern Application — Delhi Technological University ('28)",
+    "Application for SDE Intern — Core DSA, Systems Design & AI",
+    "Software Engineer Intern — Distributed Architectures & ML Pipelines",
 ]
 
 
@@ -165,7 +160,7 @@ SMTP_MAX_RETRIES     = _get_env_int("SMTP_MAX_RETRIES", 2)
 SMTP_RETRY_DELAY_S   = _get_env_float("SMTP_RETRY_DELAY_S", 5.0)
 
 SENDER_NAME          = os.getenv("SENDER_NAME", "Arnav")
-RATE_LIMIT_S         = _get_env_float("RATE_LIMIT_SECONDS", 8.0)
+RATE_LIMIT_S         = _get_env_float("RATE_LIMIT_SECONDS", 4.0)
 GEN_MAX_TOKENS       = _get_env_int("GEN_MAX_TOKENS", 1500)
 EMAIL_MAX_WORDS      = _get_env_int("EMAIL_MAX_WORDS", 400)
 EMAIL_MAX_SUBJECT_LEN = _get_env_int("EMAIL_MAX_SUBJECT_LEN", 100)
@@ -202,17 +197,90 @@ class LLMProvider:
     lock: threading.Lock = field(default_factory=threading.Lock)
 
 _provider_pool: list[LLMProvider] = []
+_provider_idx = 0
 _provider_pool_lock = threading.Lock()
 
+def init_llm_providers() -> list[LLMProvider]:
+    """Initialize all configured LLM providers/keys supporting multi-key rotation."""
+    global _provider_pool
+    with _provider_pool_lock:
+        _provider_pool.clear()
+        
+        default_base_url = os.getenv("LLM_BASE_URL") or LLM_BASE_URL
+        default_model = os.getenv("LLM_MODEL") or LLM_MODEL
+        default_fallback_model = os.getenv("LLM_FALLBACK_MODEL") or LLM_FALLBACK_MODEL
+        
+        # 1. Collect all API keys in order of precedence
+        collected_keys: list[str] = []
+        
+        # Check LLM_API_KEYS (comma-separated)
+        keys_env = os.getenv("LLM_API_KEYS", "")
+        if keys_env:
+            for k in keys_env.split(","):
+                k_clean = k.strip()
+                if k_clean and k_clean not in collected_keys:
+                    collected_keys.append(k_clean)
+
+        # Check LLM_API_KEY (could also be comma-separated or single)
+        raw_key = os.getenv("LLM_API_KEY", "")
+        if raw_key:
+            for k in raw_key.split(","):
+                k_clean = k.strip()
+                if k_clean and k_clean not in collected_keys:
+                    collected_keys.append(k_clean)
+
+        # Add collected keys to provider pool
+        for idx, key in enumerate(collected_keys):
+            key_num = idx + 1
+            name = f"Key_{key_num}" if len(collected_keys) > 1 else "Primary"
+            b_url = os.getenv(f"LLM_{key_num}_BASE_URL") or os.getenv(f"LLM_BASE_URL_{key_num}") or default_base_url
+            mod = os.getenv(f"LLM_{key_num}_MODEL") or os.getenv(f"LLM_MODEL_{key_num}") or default_model
+            fb_mod = os.getenv(f"LLM_{key_num}_FALLBACK_MODEL") or os.getenv(f"LLM_FALLBACK_MODEL_{key_num}") or default_fallback_model
+            _provider_pool.append(LLMProvider(
+                name=name,
+                client=OpenAI(api_key=key, base_url=b_url, max_retries=0),
+                model=mod,
+                fallback_model=fb_mod
+            ))
+
+        # Check numbered keys: LLM_2_API_KEY, LLM_API_KEY_2, up to 10
+        for i in range(2, 11):
+            key = os.getenv(f"LLM_{i}_API_KEY") or os.getenv(f"LLM_API_KEY_{i}")
+            if key:
+                k_clean = key.strip()
+                if not any(p.client.api_key == k_clean for p in _provider_pool):
+                    b_url = os.getenv(f"LLM_{i}_BASE_URL") or os.getenv(f"LLM_BASE_URL_{i}") or default_base_url
+                    mod = os.getenv(f"LLM_{i}_MODEL") or os.getenv(f"LLM_MODEL_{i}") or default_model
+                    fb_mod = os.getenv(f"LLM_{i}_FALLBACK_MODEL") or os.getenv(f"LLM_FALLBACK_MODEL_{i}") or default_fallback_model
+                    _provider_pool.append(LLMProvider(
+                        name=f"Key_{i}",
+                        client=OpenAI(api_key=k_clean, base_url=b_url, max_retries=0),
+                        model=mod,
+                        fallback_model=fb_mod
+                    ))
+                    
+        return _provider_pool
+
 def get_active_provider() -> LLMProvider:
+    """Return the next active, non-exhausted LLM provider using round-robin selection."""
+    global _provider_idx
     while True:
         with _provider_pool_lock:
+            if not _provider_pool:
+                raise RuntimeError("No LLM providers configured in pool")
             now = time.time()
-            for p in _provider_pool:
+            num_providers = len(_provider_pool)
+            for offset in range(num_providers):
+                idx = (_provider_idx + offset) % num_providers
+                p = _provider_pool[idx]
                 if now >= p.exhausted_until:
+                    _provider_idx = (idx + 1) % num_providers
                     return p
-            # All exhausted — find soonest recovery time outside the lock
-            earliest_wake = min(p.exhausted_until for p in _provider_pool)
+            # All providers exhausted — check if any have a finite recovery time
+            finite_wakes = [p.exhausted_until for p in _provider_pool if p.exhausted_until < float("inf")]
+            if not finite_wakes:
+                raise RuntimeError("All configured LLM providers/keys are permanently exhausted or invalid")
+            earliest_wake = min(finite_wakes)
         sleep_time = earliest_wake - time.time()
         if sleep_time > 0:
             log.warning(f"All LLM providers are rate-limited. Sleeping for {sleep_time:.1f}s...")
@@ -383,11 +451,7 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
         # Explicitly encode the body as utf-8
         msg.attach(MIMEText(body, "plain", "utf-8"))
 
-        # Generate and add X-Entity-Ref-ID tracking header
-        if company_name:
-            ref_string = f"{company_name}:{to_addr}:{time.time()}"
-            ref_id = hashlib.sha256(ref_string.encode()).hexdigest()[:16]
-            msg["X-Entity-Ref-ID"] = ref_id
+        # Removed custom X-Entity-Ref-ID tracking header to avoid corporate spam filters
 
         # Attach resume
         with open(RESUME_PDF, "rb") as f:
@@ -403,8 +467,9 @@ def send_email(to_addr: str, subject: str, body: str, company_name: str = "", dr
         )
         msg.attach(part)
 
-        # Apply intelligent rate limiting
-        time.sleep(_current_delay)
+        # Apply intelligent rate limiting with random jitter (80% to 120%) to mimic human behavior
+        jitter = random.uniform(0.8, 1.2)
+        time.sleep(_current_delay * jitter)
 
         success = False
         sender_failed = False
@@ -916,24 +981,31 @@ def calculate_contact_score(company: dict, sent_log: dict = None) -> int:
 SYSTEM_PROMPT = """You are writing a cold job-application email on behalf of Arnav Sagar, a 2nd-year B.Tech Software Engineering student at Delhi Technological University (DTU), CGPA 8.75.
 
 ## Who Arnav Is
-Arnav is a highly capable student developer. He completed two research internships before the end of his first year — both producing real, deployed systems:
-- At AIMS-DTU: built a 3-stage LLM moderation pipeline (regex → semantic embeddings → fine-tuned DistilBERT + XGBoost) with sub-10ms filtering, served via FastAPI in production.
-- At 5G Lab, DoT DTU: built a sub-25ms P95 on-device vision inference pipeline using YOLOv8, CUDA, and a self-supervised trajectory autoencoder. Presented at PEC Chandigarh.
-His strongest projects (CLASP, Regavis, YTRAG, LLM Safety Shield, JAILS, ZeroFall+, CAF-OTSRNet) involve real engineering — not tutorials. He can cite concrete metrics: 0.9996 accuracy, +15.74% PSNR vs SOTA, 4× model compression.
+Arnav is a capable, systems-minded student engineer with strong Data Structures & Algorithms (DSA) problem-solving skills in C++ and Python, combined with real-world experience in Systems Design and Machine Learning:
+- Built CLASP: a distributed API proxy with pre-emptive token-bucket rate limiting across 18 LLM providers, circuit breakers, 3-tier caching (LRU/SQLite/FAISS), and an async priority queue (934 passing automated tests).
+- At Regavis Labs: built a 2-stage audio deepfake detection cascade (LFCC-LCNN + XLSR-53) cutting average inference compute by ~85%.
+- At AIMS-DTU: built a 3-stage LLM moderation pipeline (regex → DistilBERT + XGBoost + LOF) with sub-10ms latency in production FastAPI.
+- At 5G Lab DoT: engineered sub-25ms on-device YOLOv8 vision pipeline with 4× model compression.
 
-## Email Structure (MANDATORY — 4 paragraphs, do not include sign-off)
-The email must consist exactly of a salutation and four body paragraphs. Do NOT generate the sign-off block (like 'Thanks for your time, Arnav Sagar...'); this will be appended programmatically by Python code.
+## Tone & Style (CRITICAL: MUST FEEL NATURAL & HUMAN-WRITTEN)
+- The email must read like it was genuinely written by a thoughtful, humble, yet technically sharp engineering student reaching out directly to a team.
+- Avoid robotic, generic AI language, marketing buzzwords, or stiff corporate templates.
+- NEVER ask for a "brief call", "quick 10-minute chat", or "offer to show a demo".
+- NEVER mention hackathons or generic contest awards in the subject line or email body. Focus strictly on Systems Design, ML/AI, and DSA fundamentals.
 
-1. **SALUTATION:** Start with "Hi [HR Name]," (or "Hi Hiring Team," if Name is not specified in the prompt).
-2. **PARAGRAPH 1 (INTRO & HOOK):** Open with an introduction (e.g., "I'm Arnav Sagar, a second-year Software Engineering student at Delhi Technological University, and I'm reaching out about AI/ML intern opportunities at [Company]."). Connect your interest directly to the target company's mission/product.
-3. **PARAGRAPH 2 & 3 (VALUE PROP):** Pitch 2-3 of your strongest matching projects from the candidate brief in a narrative style (not bullet points). Cite specific technical details and concrete metrics (e.g. rate-limiting, token-buckets, latency reductions, accuracy percentages) to show real engineering depth.
-4. **PARAGRAPH 4 (ASK):** Express specific interest in the scale/challenges of the company and make a clear request for a brief chat or opportunity to share more details.
+## Email Structure (MANDATORY — 4 body paragraphs, no sign-off block)
+The email must consist exactly of a salutation and four concise paragraphs:
+
+1. **SALUTATION:** Start exactly with "Hi [HR Name]," (or "Hi Hiring Team," if no name is specified).
+2. **PARAGRAPH 1 (APPRECIATION & INTRO):** Open with genuine appreciation for what the company is building and its vision. Introduce yourself: Arnav Sagar, a second-year Software Engineering student at Delhi Technological University (DTU), reaching out regarding SDE / AI/ML internship opportunities.
+3. **PARAGRAPH 2 & 3 (SYSTEMS, ML & DSA FIT):** Pitch 2-3 of your strongest matching projects from the candidate brief in a narrative, technical style (not bullet points). Cite specific technical details and metrics (e.g. rate-limiting, token-buckets, caching, latency reductions, model compression) to demonstrate engineering depth and explain why your background is a strong fit for their engineering challenges.
+4. **PARAGRAPH 4 (RESUME & DIRECT INTERNSHIP ASK):** State that your resume is attached and ask directly to be considered for an internship opportunity. (Do NOT ask for a phone call or meeting).
 
 ## Hard Rules
-- **Word count:** Aim for 200–350 words in the body paragraphs.
-- **Subject line:** Create a compelling, professional, and specific subject line in the format: "2nd-Year DTU Engineer — [Specific Tech Detail/Project Hook]" (e.g., "2nd-Year DTU Engineer — Rate-Limiting a Multi-Provider LLM Proxy Across 18 APIs"). Do not make it generic or spammy.
-- **BANNED filler phrases**: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit", "demonstrate", "showcase"
-- Do NOT generate any sign-off text (no "Best regards", no name, no phone, no links). Just stop after Paragraph 4.
+- **Word count:** Aim for 220–350 words in the body paragraphs.
+- **Subject line:** Create a natural, compelling subject line focused on Systems Design, ML/AI, or DSA in the format: "Software Engineering Intern Application — [Specific Tech / Systems / ML Hook]" (e.g. "Software Engineering Intern Application — Distributed Systems & ML (DTU '28)").
+- **BANNED filler phrases**: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit", "demonstrate", "showcase", "jump on a call", "quick chat", "give a demo", "hackathon"
+- Do NOT generate any sign-off block (like "Thanks for your time", name, phone, links); this is appended automatically. Just stop after Paragraph 4.
 
 ## Output Format
 Return ONLY valid JSON with exactly these keys:
@@ -1230,18 +1302,16 @@ def _fix_unterminated_strings(json_str: str) -> dict:
 # Template-based fallback if LLM completely fails
 EMAIL_TEMPLATE = """Hi {name},
 
-I hope this email finds you well. I am writing to express my strong interest in contributing as an AI/ML Engineering Intern at {company}.
+I've been following what {company} is building, and I really appreciate your engineering focus and product vision.
 
-I am currently a 2nd-year BTech Software Engineering student at Delhi Technological University (DTU). I have already completed two research internships:
-• At AIMS-DTU, I built a 3-stage LLM moderation pipeline using DistilBERT + XGBoost with sub-10ms filtering.
-• At the 5G Lab (DTU), I developed edge AI threat detection models using YOLOv8.
+I am a 2nd-year Software Engineering student at Delhi Technological University (DTU, CGPA 8.75) with a strong background in Systems Design, core DSA, and production ML pipelines. I have completed two research internships (at AIMS-DTU building sub-10ms LLM moderation filters and at 5G Lab DoT optimizing on-device vision models) alongside ML engineering work at Regavis Labs.
 
-In addition to my internships, I have built several metric-driven engineering projects:
-• CLASP — a rate-limit-aware multi-provider LLM proxy with token-bucket limiting and an async priority queue (934 passing tests).
-• Regavis — a two-stage audio deepfake detection cascade (LFCC-LCNN + XLSR-53 + AASIST) with Indic speech bootstrapping.
-• YTRAG — a semantic retrieval YouTube chatbot leveraging FAISS, BM25, and RRF fusion.
+My core projects reflect end-to-end engineering depth:
+• CLASP: Built a distributed multi-provider LLM proxy with token-bucket rate-limiting, circuit breakers, and an async priority queue across 18 APIs (934 passing automated tests).
+• Regavis Deepfake Detection: Built a two-stage audio verification cascade (LFCC-LCNN + XLSR-53) cutting average inference compute by ~85%.
+• Retrieval Systems (RAG): Engineered multi-stage hybrid retrieval (FAISS + BM25, RRF fusion, CRAG hallucination evaluation) over large-scale document pipelines.
 
-I would love the opportunity to bring my hands-on experience in building robust, low-latency AI pipelines to the team at {company}. I have attached my resume for your review and would appreciate the chance to discuss how I can contribute to your goals.
+Given {company}'s engineering initiatives, I would love to be considered for an SDE or AI/ML internship opportunity. I have attached my resume for your review.
 
 GitHub: github.com/zibranxo
 Resume: attached
@@ -1298,7 +1368,7 @@ PROJECT_BRIEFS: dict[str, str] = {
         "HyDE query expansion, and CRAG-based hallucination suppression.",
     "CAF-OTSRNet":
         "Triple-encoder cross-attention fusion for thermal super-resolution. "
-        "PSNR +15.74%, SSIM +8.22% vs SOTA on ISRO dataset. National Finalist, Smart India Hackathon 2025.",
+        "PSNR +15.74%, SSIM +8.22% vs SOTA on ISRO thermal/optical dataset with progressive Laplacian decoding.",
     "CLASP":
         "Built a rate-limit-aware multi-provider LLM proxy with token-bucket limiting across multi-key pools, "
         "circuit breakers, and an async priority queue with SSE keep-alive absorption; two-tier LRU/SQLite/FAISS cache; 934 passing tests.",
@@ -1385,8 +1455,8 @@ def build_candidate_context(about_me: str, company_tag: str) -> str:
 
     return f"""## Arnav Sagar — Candidate Brief
 - DTU 2nd Year, B.Tech Software Engineering | CGPA: 8.75/10
-- 2 research internships shipped before end of Year 1 (AIMS-DTU LLM Safety + 5G Lab DoT)
-- National Finalist, Smart India Hackathon 2025 (ISRO problem statement)
+- Strong foundation in Systems Design, core DSA (C++/Python), and low-latency ML pipelines
+- 2 research internships (AIMS-DTU LLM Safety + 5G Lab DoT) + ML engineering at Regavis Labs
 
 ## Most Relevant Work for This Company's Domain ({tag_normalised})
 {projects_block}
@@ -1418,8 +1488,8 @@ def generate_email(
     candidate_ctx = build_candidate_context(about_me, co_tag)
 
     user_prompt = f"""## Your Task
-Write a cold job-application email on behalf of Arnav Sagar for the company below.
-Use the candidate brief and company context to make it specific and metric-grounded.
+Write a natural, human-written cold job-application email on behalf of Arnav Sagar for the company below.
+Focus on Systems Design, ML/AI, and DSA problem solving.
 
 ---
 
@@ -1448,15 +1518,15 @@ No website context available — use your knowledge of {co_name} if known, other
 ---
 
 ## Output Requirements
-- Subject line: Create a compelling, professional, and specific subject line in the format: "2nd-Year DTU Engineer — [Specific Tech Detail/Project Hook]" (e.g., "2nd-Year DTU Engineer — Rate-Limiting a Multi-Provider LLM Proxy Across 18 APIs"). Do not make it generic or spammy.
+- Subject line: Natural, human-written subject line focused on Systems Design, ML/AI, or DSA (e.g., "Software Engineering Intern Application — Systems Design & ML (DTU '28)"). Never mention hackathons.
 - Body structure (4 body paragraphs exactly, no sign-off block):
   1. SALUTATION: Start exactly with "Hi {co_hr_name},"
-  2. PARAGRAPH 1 (INTRO & HOOK): Open with an introduction (e.g., "I'm Arnav Sagar, a second-year Software Engineering student at Delhi Technological University, and I'm reaching out about AI/ML intern opportunities at {co_name}."). Connect your interest directly to the target company's mission/product.
-  3. PARAGRAPH 2 & 3 (VALUE PROP): Pitch 2-3 of your strongest matching projects from the candidate brief in a narrative style (not bullet points). Cite specific technical details and concrete metrics (e.g. rate-limiting, token-buckets, latency reductions, accuracy percentages) to show real engineering depth.
-  4. PARAGRAPH 4 (ASK): Express specific interest in the scale/challenges of the company and make a clear request for a brief chat or opportunity to discuss further.
-- Word count: Aim for 200–350 words in the body paragraphs.
-- BANNED filler phrases: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit", "demonstrate", "showcase"
-- Do NOT generate any sign-off block or contact details (e.g. "Thanks for your time", your name, email, phone, links) at the end. Just stop after paragraph 4.
+  2. PARAGRAPH 1 (APPRECIATION & INTRO): Sincerely appreciate what {co_name} is building and connect genuine interest to their engineering vision. Introduce Arnav Sagar (DTU Software Engineering, 2nd year).
+  3. PARAGRAPH 2 & 3 (SYSTEMS, ML & FIT): Pitch 2-3 strongest matching projects from the candidate brief with concrete technical metrics (rate-limiting, latency, token-buckets, model compression) and show why your skills match their engineering stack.
+  4. PARAGRAPH 4 (DIRECT ASK): State that your resume is attached and ask directly for internship consideration. Do NOT ask for calls or demos.
+- Word count: 220–350 words in the body paragraphs.
+- BANNED filler phrases: "passionate about", "excited to", "highly motivated", "quick learner", "team player", "I believe I can", "I feel I would be a great fit", "demonstrate", "showcase", "quick call", "jump on a call", "show a demo", "hackathon"
+- Do NOT generate any sign-off block or contact details. Just stop after paragraph 4.
 
 Return ONLY: {{"subject": "...", "body": "..."}}
 """
@@ -1540,7 +1610,7 @@ def _template_fallback_email(company: dict) -> dict:
     if OVERRIDE_WITH_PRESET_SUBJECTS:
         subject = get_preset_subject(company["Email"])
     else:
-        subject = "Internship Application — Arnav Sagar (DTU) — AI/ML Engineering"
+        subject = "Internship Application — Arnav Sagar (DTU) — Systems & AI/ML"
     name = company.get("Name", "") or "Hiring Team"
     body = EMAIL_TEMPLATE.format(name=name, company=company["Company"])
     log.warning(f"  {company['Company']}: Using template fallback (LLM generation failed)")
@@ -1548,13 +1618,13 @@ def _template_fallback_email(company: dict) -> dict:
 
 
 def _is_fatal_llm_error(e: Exception) -> bool:
-    """Determine if an LLM API error is fatal (meaning retrying will not resolve it)."""
+    """Determine if an LLM API error is fatal across all providers (e.g. invalid request structure)."""
     err_type = type(e).__name__
-    if err_type in ("BadRequestError", "AuthenticationError", "PermissionDeniedError", "NotFoundError"):
+    if err_type in ("BadRequestError", "NotFoundError"):
         return True
     
     msg = str(e).lower()
-    if any(k in msg for k in ["api key", "unauthorized", "bad request", "invalid API key", "not found"]):
+    if any(k in msg for k in ["bad request", "not found", "model not found"]):
         return True
         
     return False
@@ -1574,10 +1644,17 @@ def generate_email_with_retry(
     company_context: str = "",
 ) -> dict:
     last_error = None
-    attempts = max_retries + 1
+    # Ensure enough attempts to cycle through all configured keys in the pool plus retries
+    pool_size = max(1, len(_provider_pool))
+    total_attempts = pool_size * (max_retries + 1)
 
-    for attempt in range(1, attempts + 1):
-        provider = get_active_provider()
+    for attempt in range(1, total_attempts + 1):
+        try:
+            provider = get_active_provider()
+        except RuntimeError as pool_err:
+            log.error(f"  All LLM providers unavailable for {company['Company']}: {pool_err}")
+            raise pool_err
+
         try:
             return generate_email(
                 provider,
@@ -1596,20 +1673,32 @@ def generate_email_with_retry(
             last_error = e
             error_msg = str(e).lower()
 
-            if "429" in error_msg or "too many requests" in error_msg:
-                log.warning(f"  [{company['Company']}] 429 Rate Limit hit on {provider.name}. Quarantining provider for {LLM_QUARANTINE_S:.0f}s and switching...")
+            # 1. Rate Limit (429 / Too Many Requests) -> Quarantine key and failover immediately
+            if "429" in error_msg or "too many requests" in error_msg or "rate limit" in error_msg:
+                log.warning(
+                    f"  [{company['Company']}] 429 Rate Limit hit on {provider.name}. Quarantining provider for {LLM_QUARANTINE_S:.0f}s and switching..."
+                )
                 provider.exhausted_until = time.time() + LLM_QUARANTINE_S
                 continue
 
-            if _is_fatal_llm_error(e):
-                log.error(f"  Fatal LLM error for {company['Company']}: {e}. Aborting retries.")
-                break
+            # 2. Key Auth / Quota / Billing errors -> Disable key for this run and switch
+            is_quota_or_auth = any(k in error_msg for k in [
+                "insufficient_quota", "quota exceeded", "credit balance", "billing",
+                "invalid api key", "invalid_api_key", "unauthorized", "authentication",
+                "permission_denied", "forbidden", "401", "403"
+            ])
+            if is_quota_or_auth or type(e).__name__ in ("AuthenticationError", "PermissionDeniedError"):
+                log.warning(
+                    f"  [{company['Company']}] Auth/Quota issue on {provider.name} ({e}). Disabling key for this run and switching to next key..."
+                )
+                provider.exhausted_until = float("inf")
+                continue
 
-            # Empty content / reasoning failure → try fallback model immediately
+            # 3. Model fallback for empty content / reasoning token exhaustion
             if provider.fallback_model and provider.fallback_model != provider.model:
                 if any(k in error_msg for k in ["reasoning consumed tokens", "empty content", "none", "timed out", "timeout"]):
                     log.warning(
-                        f"  {company['Company']}: primary model failed; trying fallback '{provider.fallback_model}' on {provider.name}"
+                        f"  {company['Company']}: primary model failed on {provider.name}; trying fallback '{provider.fallback_model}'"
                     )
                     try:
                         return generate_email(
@@ -1629,7 +1718,7 @@ def generate_email_with_retry(
                         last_error = fallback_e
                         log.warning(f"  {company['Company']}: fallback also failed: {fallback_e}")
 
-            # JSON parse failure can sometimes be fixed with simpler prompt on fallback
+            # 4. JSON parse failure recovery
             if provider.fallback_model and provider.fallback_model != provider.model and "json" in error_msg:
                 log.warning(
                     f"  {company['Company']}: JSON parse failed; retrying with fallback '{provider.fallback_model}' on {provider.name} (no JSON format)"
@@ -1651,17 +1740,20 @@ def generate_email_with_retry(
                 except Exception as fallback_e:
                     last_error = fallback_e
 
-            if attempt == attempts:
+            # Fatal error that cannot be fixed by key rotation or fallback
+            if _is_fatal_llm_error(e) and not is_quota_or_auth:
+                log.error(f"  Fatal LLM error for {company['Company']}: {e}. Aborting retries.")
                 break
+
+            if attempt >= total_attempts:
+                break
+
             # Exponential backoff with jitter and max delay
-            base_delay = backoff_base * (2 ** (attempt - 1))
-            # Apply jitter: random factor between 0.5 and 1.5 to prevent thundering herd
+            base_delay = backoff_base * (2 ** (min(attempt, 4) - 1))
             jittered_delay = base_delay * (0.5 + random.random())
-            # Cap at maximum delay to prevent excessively long waits
-            max_delay = LLM_MAX_BACKOFF_S
-            sleep_s = min(jittered_delay, max_delay)
+            sleep_s = min(jittered_delay, LLM_MAX_BACKOFF_S)
             log.warning(
-                f"  Generation retry {attempt}/{max_retries} for {company['Company']}: {e} | sleeping {sleep_s:.1f}s"
+                f"  Generation retry {attempt}/{total_attempts} for {company['Company']}: {e} | sleeping {sleep_s:.1f}s"
             )
             time.sleep(sleep_s)
 
@@ -2258,7 +2350,13 @@ def main():
             _senders_pool.append(SenderAccount(name=SENDER_NAME, email=s_email, password=s_pass))
 
     missing = []
-    if not LLM_API_KEY:   missing.append("LLM_API_KEY")
+    has_llm_key = bool(
+        LLM_API_KEY
+        or os.getenv("LLM_API_KEYS")
+        or any(os.getenv(f"LLM_{i}_API_KEY") or os.getenv(f"LLM_API_KEY_{i}") for i in range(2, 11))
+    )
+    if not has_llm_key:
+        missing.append("LLM_API_KEY")
     if not args.dry_run and not _senders_pool:
         missing.append("SENDER_EMAIL and SENDER_APP_PASSWORD")
     if missing:
@@ -2321,7 +2419,9 @@ def main():
             domain = email.split("@")[1]
             if args.check_mx:
                 if not has_valid_mx_record(domain):
-                    log.warning(f"No valid MX record detected for {domain}, but proceeding anyway: {company['Company']} -> {email}")
+                    log.warning(f"No valid MX record detected for {domain}, skipping to avoid hard bounce: {company['Company']} -> {email}")
+                    invalid_email_count += 1
+                    continue
 
             # Check for duplicates within CSV
             if email in seen_emails:
@@ -2432,32 +2532,12 @@ def main():
         console.print()
 
     # ── Multi-Provider Initialization ─────────────────────────────────────────
-    global _provider_pool
-    _provider_pool.clear()
-
-    if LLM_API_KEY:
-        _provider_pool.append(LLMProvider(
-            name="Primary",
-            client=OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL, max_retries=0),
-            model=LLM_MODEL,
-            fallback_model=LLM_FALLBACK_MODEL
-        ))
-        
-    for i in range(2, 11):
-        key = os.getenv(f"LLM_{i}_API_KEY")
-        if key:
-            _provider_pool.append(LLMProvider(
-                name=f"Provider_{i}",
-                client=OpenAI(api_key=key, base_url=os.getenv(f"LLM_{i}_BASE_URL"), max_retries=0),
-                model=os.getenv(f"LLM_{i}_MODEL", LLM_MODEL),
-                fallback_model=os.getenv(f"LLM_{i}_FALLBACK_MODEL", LLM_FALLBACK_MODEL)
-            ))
-            
+    init_llm_providers()
     if not _provider_pool:
         log.error("No LLM providers configured. Please set LLM_API_KEY in your .env.")
         return
         
-    log.info(f"Loaded [bold]{len(_provider_pool)}[/] LLM provider(s): {', '.join(p.name for p in _provider_pool)}")
+    log.info(f"Loaded [bold]{len(_provider_pool)}[/] LLM provider(s)/key(s): {', '.join(p.name for p in _provider_pool)}")
 
     # ── Startup banner ─────────────────────────────────────────────────────
     print_banner(
